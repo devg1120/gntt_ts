@@ -1,0 +1,30 @@
+
+yarn
+
+npm run dev 
+
+
+http://127.0.0.1:3000/examples/
+
+---------------------------------
+cd demo-test
+
+yarn
+
+npm run dev
+
+http://127.0.0.1:3000/
+
+=================================  js => ts migre
+JavaScript プロジェクトを TypeScript に移行
+
+http://rightcode.co.jp/blogs/25079
+
+yarn add --dev ts-migrate
+
+npx ts-migrate -- --help
+
+npx ts-migrate-full src
+
+
+
