@@ -1,92 +1,37 @@
-import { createSignal, createMemo, createEffect, onMount, untrack, batch, Accessor, JSX } from 'solid-js';
-import { createTaskStore } from '../stores/taskStore';
-import { createGanttConfigStore } from '../stores/ganttConfigStore';
-import { createGanttDateStore } from '../stores/ganttDateStore';
-import { createResourceStore } from '../stores/resourceStore';
-import { processTasks, findDateBounds } from '../utils/taskProcessor';
-import { extractResourcesFromTasks } from '../utils/resourceProcessor';
-import { createVirtualViewport } from '../utils/createVirtualViewport';
-import { buildHierarchy, isHiddenByCollapsedAncestor } from '../utils/hierarchyProcessor';
-import { recomputeAllSummaryBounds } from '../utils/barCalculations';
-import { calculateRowLayouts, calculateSimpleRowLayouts, rowLayoutsToSortedArray } from '../utils/rowLayoutCalculator';
+import { createSignal, createMemo, createEffect, onMount, untrack } from 'solid-js';
+import { createTaskStore } from '../stores/taskStore.js';
+import { createGanttConfigStore } from '../stores/ganttConfigStore.js';
+import { createGanttDateStore } from '../stores/ganttDateStore.js';
+import { createResourceStore } from '../stores/resourceStore.js';
+import { processTasks, findDateBounds } from '../utils/taskProcessor.js';
+import { extractResourcesFromTasks } from '../utils/resourceProcessor.js';
+import { createVirtualViewport } from '../utils/createVirtualViewport.js';
+import { buildHierarchy, isHiddenByCollapsedAncestor } from '../utils/hierarchyProcessor.js';
+import { recomputeAllSummaryBounds } from '../utils/barCalculations.js';
+import { calculateRowLayouts, calculateSimpleRowLayouts, rowLayoutsToSortedArray } from '../utils/rowLayoutCalculator.js';
 
-import { GanttContainer } from './GanttContainer';
-import { Grid } from './Grid';
-import { DateHeaders } from './DateHeaders';
-import { ResourceColumn } from './ResourceColumn';
-import { TaskLayer } from './TaskLayer';
-//import { TaskLayerMinimal } from './TaskLayerMinimal';
-import { TaskDataPopup } from './TaskDataPopup';
-import { TaskDataModal } from './TaskDataModal';
-import { GanttEventsProvider } from '../contexts/GanttEvents';
-import type { GanttTask, ProcessedTask, Relationship, BarPosition, ResourceInput } from '../types';
-import type { RowLayout } from '../utils/rowLayoutCalculator';
-
-interface ContainerAPI {
-    scrollTo: (x: number, smooth?: boolean) => void;
-    getScrollLeft: () => number;
-    getScrollTop: () => number;
-    getContainerWidth: () => number;
-    getContainerHeight: () => number;
-    scrollLeftSignal?: Accessor<number>;
-    scrollTopSignal?: Accessor<number>;
-    containerWidthSignal?: Accessor<number>;
-    containerHeightSignal?: Accessor<number>;
-}
-
-interface ArrowConfigOptions {
-    stroke?: string;
-    curveRadius?: number;
-    headShape?: string;
-    headSize?: number;
-}
-
-interface GanttOptions {
-    view_mode?: string;
-    scroll_to?: 'start' | 'today' | string;
-    upper_header_height?: number;
-    lower_header_height?: number;
-    resource_column_width?: number;
-    arrow_color?: string;
-    arrow_curve?: number;
-    arrow_head_shape?: string;
-    arrow_head_size?: number;
-    lines?: 'horizontal' | 'vertical' | 'both' | 'none';
-    readonly?: boolean;
-    bar_height?: number;
-    padding?: number;
-    column_width?: number;
-    [key: string]: unknown;
-}
-
-interface GanttProps {
-    tasks: GanttTask[];
-    resources?: ResourceInput[];
-    options?: GanttOptions;
-    arrowConfig?: ArrowConfigOptions;
-    taskLayerMode?: 'minimal' | 'full';
-    arrowRenderer?: 'batched' | 'individual';
-    overscanCols?: number;
-    overscanRows?: number;
-    overscanX?: number;
-    onDateChange?: (taskId: string, position: { x: number; width: number }) => void;
-    onProgressChange?: (taskId: string, progress: number) => void;
-    onResizeEnd?: (taskId: string) => void;
-    onTaskClick?: (taskId: string, event: MouseEvent) => void;
-}
-
-declare global {
-    interface Window {
-        __ganttTaskStore?: ReturnType<typeof createTaskStore>;
-        __ganttConfig?: ReturnType<typeof createGanttConfigStore>;
-        __ganttDateStore?: ReturnType<typeof createGanttDateStore>;
-    }
-}
+import { GanttContainer } from './GanttContainer.jsx';
+import { Grid } from './Grid.jsx';
+import { DateHeaders } from './DateHeaders.jsx';
+import { ResourceColumn } from './ResourceColumn.jsx';
+import { TaskLayer } from './TaskLayer.jsx';
+import { ArrowLayer } from './ArrowLayer.jsx';
+import { ArrowLayerBatched } from './ArrowLayerBatched.jsx';
+import { TaskDataPopup } from './TaskDataPopup.jsx';
+import { TaskDataModal } from './TaskDataModal.jsx';
+import { GanttEventsProvider } from '../contexts/GanttEvents.jsx';
 
 /**
  * Gantt - Main orchestrator component for the Gantt chart.
+ *
+ * @param {Object} props
+ * @param {Array} props.tasks - Array of task objects
+ * @param {Object} props.options - Configuration options
+ * @param {Function} props.onDateChange - Callback when task dates change
+ * @param {Function} props.onProgressChange - Callback when task progress changes
+ * @param {Function} props.onTaskClick - Callback when task is clicked
  */
-export function Gantt(props: GanttProps): JSX.Element {
+export function Gantt(props) {
     // Create stores
     const taskStore = createTaskStore();
     const ganttConfig = createGanttConfigStore(props.options || {});
@@ -101,7 +46,7 @@ export function Gantt(props: GanttProps): JSX.Element {
     }
 
     // Container reference for scroll control (reactive so effects can depend on it)
-    const [containerApi, setContainerApi] = createSignal<ContainerAPI | null>(null);
+    const [containerApi, setContainerApi] = createSignal(null);
 
     // Viewport state for virtualization
     const [scrollLeft, setScrollLeft] = createSignal(0);
@@ -111,21 +56,21 @@ export function Gantt(props: GanttProps): JSX.Element {
 
     // Fast scroll detection - hide arrows during rapid scrolling for performance
     const [isScrolling, setIsScrolling] = createSignal(false);
-    let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+    let scrollTimeout = null;
 
     // Relationships state
-    const [relationships, setRelationships] = createSignal<Relationship[]>([]);
+    const [relationships, setRelationships] = createSignal([]);
 
     // Legacy resources signal - for backward compatibility when no resourceStore resources
-    const [legacyResources, setLegacyResources] = createSignal<string[]>([]);
+    const [legacyResources, setLegacyResources] = createSignal([]);
 
     // Hover state for popup
-    const [hoveredTaskId, setHoveredTaskId] = createSignal<string | null>(null);
+    const [hoveredTaskId, setHoveredTaskId] = createSignal(null);
     const [popupPosition, setPopupPosition] = createSignal({ x: 0, y: 0 });
     const [popupVisible, setPopupVisible] = createSignal(false);
 
     // Modal state for click
-    const [modalTaskId, setModalTaskId] = createSignal<string | null>(null);
+    const [modalTaskId, setModalTaskId] = createSignal(null);
     const [modalVisible, setModalVisible] = createSignal(false);
 
     // Computed task/position for popup
@@ -158,7 +103,7 @@ export function Gantt(props: GanttProps): JSX.Element {
     });
 
     // Initialize tasks and compute positions
-    const initializeTasks = (rawTasks: GanttTask[], useResourceStore = true): void => {
+    const initializeTasks = (rawTasks, useResourceStore = true) => {
         if (!rawTasks || rawTasks.length === 0) {
             taskStore.clear();
             setRelationships([]);
@@ -169,8 +114,8 @@ export function Gantt(props: GanttProps): JSX.Element {
         // First, setup dates from task bounds
         const { minDate, maxDate } = findDateBounds(
             rawTasks.map((t) => ({
-                _start: new Date(t.start),
-                _end: new Date(t.end || t.start),
+                _start: t._start || new Date(t.start),
+                _end: t._end || new Date(t.end || t.start),
             })),
         );
 
@@ -199,7 +144,7 @@ export function Gantt(props: GanttProps): JSX.Element {
         // Determine resource index map to use
         // If resourceStore has explicit resources, use its map (respects collapse state)
         // Otherwise, extract resources from tasks for backward compatibility
-        let resourceIndexMap: Map<string, number> | null = null;
+        let resourceIndexMap = null;
         const hasExplicitResources = resourceStore.resources().length > 0;
 
         if (hasExplicitResources && useResourceStore) {
@@ -227,9 +172,8 @@ export function Gantt(props: GanttProps): JSX.Element {
         const collapsedTaskSet = taskStore.collapsedTasks();
         for (const task of taskMap.values()) {
             // Check if hidden by collapsed ancestor (in addition to resource group collapse)
-            const processedTask = task as ProcessedTask;
-            if (isHiddenByCollapsedAncestor(processedTask.id, taskMap as Map<string, ProcessedTask>, collapsedTaskSet)) {
-                processedTask._isHidden = true;
+            if (isHiddenByCollapsedAncestor(task.id, taskMap, collapsedTaskSet)) {
+                task._isHidden = true;
             }
         }
 
@@ -308,7 +252,7 @@ export function Gantt(props: GanttProps): JSX.Element {
     // Compute row layouts based on render mode
     // Simple mode: static heights, maximum performance
     // Detailed mode: variable heights based on expanded tasks
-    const rowLayouts = createMemo((): Map<string, RowLayout> => {
+    const rowLayouts = createMemo(() => {
         const resources = resourceStore.displayResources();
         const mode = ganttConfig.renderMode();
 
@@ -321,7 +265,7 @@ export function Gantt(props: GanttProps): JSX.Element {
             id: r.id,
             type: r.type || 'resource',
             displayIndex: i,
-            taskId: (r as { taskId?: string }).taskId, // If resource row has associated task
+            taskId: r.taskId, // If resource row has associated task
         }));
 
         const config = {
@@ -337,14 +281,15 @@ export function Gantt(props: GanttProps): JSX.Element {
 
         // Detailed mode: full layout with variable heights
         const expandedTasks = ganttConfig.expandedTasks();
-        return calculateRowLayouts(displayRows, config, expandedTasks, taskStore.tasks);
+        const taskMap = taskStore.tasks;
+        return calculateRowLayouts(displayRows, config, expandedTasks, taskMap);
     });
 
     // Sorted row layouts for binary search in virtualization
     const sortedRowLayouts = createMemo(() => rowLayoutsToSortedArray(rowLayouts()));
 
-    // Sync _bar.y values with row layout positions
-    // This ensures Arrow components (which read from _bar.y) match Bar rendering (which uses taskPosition.y)
+    // Sync $bar.y values with row layout positions
+    // This ensures Arrow components (which read from $bar.y) match Bar rendering (which uses taskPosition.y)
     createEffect(() => {
         const layouts = rowLayouts();
         if (!layouts || layouts.size === 0) return;
@@ -358,7 +303,7 @@ export function Gantt(props: GanttProps): JSX.Element {
 
                 for (const [taskId, taskPos] of layout.taskPositions) {
                     const task = taskStore.tasks[taskId];
-                    if (task && task._bar && task._bar.y !== taskPos.y) {
+                    if (task && task.$bar && task.$bar.y !== taskPos.y) {
                         taskStore.updateBarPosition(taskId, { y: taskPos.y });
                     }
                 }
@@ -406,21 +351,19 @@ export function Gantt(props: GanttProps): JSX.Element {
     });
 
     // Event handlers
-    const handleDateChange = (taskId: string, position: Partial<BarPosition>): void => {
-        if (position.x !== undefined && position.width !== undefined) {
-            props.onDateChange?.(taskId, { x: position.x, width: position.width });
-        }
+    const handleDateChange = (taskId, position) => {
+        props.onDateChange?.(taskId, position);
     };
 
-    const handleProgressChange = (taskId: string, progress: number): void => {
+    const handleProgressChange = (taskId, progress) => {
         props.onProgressChange?.(taskId, progress);
     };
 
-    const handleResizeEnd = (taskId: string): void => {
+    const handleResizeEnd = (taskId) => {
         props.onResizeEnd?.(taskId);
     };
 
-    const handleTaskClick = (taskId: string, event: MouseEvent): void => {
+    const handleTaskClick = (taskId, event) => {
         // Show modal with task debug info
         setModalTaskId(taskId);
         setModalVisible(true);
@@ -428,46 +371,35 @@ export function Gantt(props: GanttProps): JSX.Element {
         props.onTaskClick?.(taskId, event);
     };
 
-    const handleTaskHover = (taskId: string, clientX: number, clientY: number): void => {
+    const handleTaskHover = (taskId, clientX, clientY) => {
         setHoveredTaskId(taskId);
         setPopupPosition({ x: clientX, y: clientY });
         setPopupVisible(true);
     };
 
-    const handleTaskHoverEnd = (): void => {
+    const handleTaskHoverEnd = () => {
         setPopupVisible(false);
         setHoveredTaskId(null);
     };
 
-    const handleModalClose = (): void => {
+    const handleModalClose = () => {
         setModalVisible(false);
         setModalTaskId(null);
     };
 
-    const handleContainerReady = (api: ContainerAPI): void => {
+    const handleContainerReady = (api) => {
         setContainerApi(api);
 
         // Initialize viewport dimensions
         setViewportWidth(api.getContainerWidth());
         setViewportHeight(api.getContainerHeight());
 
-        // Subscribe to reactive signals from container - batch to avoid double cascade
-        if (api.scrollLeftSignal && api.scrollTopSignal) {
-            createEffect(() => {
-                const sl = api.scrollLeftSignal!();
-                const st = api.scrollTopSignal!();
-                batch(() => {
-                    setScrollLeft(sl);
-                    setScrollTop(st);
-                });
-            });
-        } else {
-            if (api.scrollLeftSignal) {
-                createEffect(() => setScrollLeft(api.scrollLeftSignal!()));
-            }
-            if (api.scrollTopSignal) {
-                createEffect(() => setScrollTop(api.scrollTopSignal!()));
-            }
+        // Subscribe to reactive signals from container
+        if (api.scrollLeftSignal) {
+            createEffect(() => setScrollLeft(api.scrollLeftSignal()));
+        }
+        if (api.scrollTopSignal) {
+            createEffect(() => setScrollTop(api.scrollTopSignal()));
         }
 
         // Fast scroll detection - set isScrolling while scroll events are firing
@@ -487,17 +419,17 @@ export function Gantt(props: GanttProps): JSX.Element {
                 setIsScrolling(true);
 
                 // Clear timeout and set new one
-                if (scrollTimeout) clearTimeout(scrollTimeout);
+                clearTimeout(scrollTimeout);
                 scrollTimeout = setTimeout(() => {
                     setIsScrolling(false);
                 }, 150); // Show arrows again 150ms after scroll stops
             }
         });
         if (api.containerWidthSignal) {
-            createEffect(() => setViewportWidth(api.containerWidthSignal!()));
+            createEffect(() => setViewportWidth(api.containerWidthSignal()));
         }
         if (api.containerHeightSignal) {
-            createEffect(() => setViewportHeight(api.containerHeightSignal!()));
+            createEffect(() => setViewportHeight(api.containerHeightSignal()));
         }
 
         // Handle 'today' scroll immediately (doesn't depend on tasks)
@@ -523,22 +455,21 @@ export function Gantt(props: GanttProps): JSX.Element {
             tasks &&
             taskIds.length > 0
         ) {
-            const firstTaskId = taskIds[0];
-            const firstTask = firstTaskId ? tasks[firstTaskId] : undefined;
-            if (firstTask?._bar?.x) {
+            const firstTask = tasks[taskIds[0]];
+            if (firstTask?.$bar?.x) {
                 // Scroll to first task with some left margin
-                api.scrollTo(Math.max(0, firstTask._bar.x - 50), false);
+                api.scrollTo(Math.max(0, firstTask.$bar.x - 50), false);
                 initialScrollDone = true;
             }
         }
     });
 
     // Header heights from options
-    const upperHeaderHeight = (): number => props.options?.upper_header_height || 45;
-    const lowerHeaderHeight = (): number => props.options?.lower_header_height || 30;
+    const upperHeaderHeight = () => props.options?.upper_header_height || 45;
+    const lowerHeaderHeight = () => props.options?.lower_header_height || 30;
 
     // Resource column width from options
-    const resourceColumnWidth = (): number => props.options?.resource_column_width || 120;
+    const resourceColumnWidth = () => props.options?.resource_column_width || 120;
 
     // Arrow configuration from options
     const arrowConfig = createMemo(() => ({
@@ -587,25 +518,6 @@ export function Gantt(props: GanttProps): JSX.Element {
                         endCol={viewport.colRange().end}
                     />
                 }
-                barsLayer={
-                        <TaskLayer
-                            taskStore={taskStore}
-                            ganttConfig={ganttConfig}
-                            relationships={relationships()}
-                            resourceStore={resourceStore}
-                            onDateChange={handleDateChange}
-                            onProgressChange={handleProgressChange}
-                            onResizeEnd={handleResizeEnd}
-                            onTaskClick={handleTaskClick}
-                            onHover={handleTaskHover}
-                            onHoverEnd={handleTaskHoverEnd}
-                            startRow={viewport.rowRange().start}
-                            endRow={viewport.rowRange().end}
-                            startX={viewport.xRange().start}
-                            endX={viewport.xRange().end}
-                            rowLayouts={rowLayouts()}
-                        />
-                }
             >
                 {/* Grid background, rows, and vertical lines (via SVG pattern) */}
                 <Grid
@@ -622,21 +534,61 @@ export function Gantt(props: GanttProps): JSX.Element {
                     resourceStore={resourceStore}
                     rowLayouts={rowLayouts()}
                 />
+
+                {/* Dependency arrows - DISABLED for task rendering test */}
+                {/* {props.arrowRenderer === 'batched' ? (
+                    <ArrowLayerBatched
+                        taskStore={taskStore}
+                        relationships={relationships()}
+                        arrowConfig={arrowConfig()}
+                        startRow={viewport.rowRange().start}
+                        endRow={viewport.rowRange().end}
+                    />
+                ) : (
+                    <ArrowLayer
+                        taskStore={taskStore}
+                        relationships={relationships()}
+                        arrowConfig={arrowConfig()}
+                        startRow={viewport.rowRange().start}
+                        endRow={viewport.rowRange().end}
+                        startX={viewport.xRange().start}
+                        endX={viewport.xRange().end}
+                    />
+                )} */}
+
+                {/* Task bars */}
+                <TaskLayer
+                    taskStore={taskStore}
+                    ganttConfig={ganttConfig}
+                    relationships={relationships()}
+                    resourceStore={resourceStore}
+                    onDateChange={handleDateChange}
+                    onProgressChange={handleProgressChange}
+                    onResizeEnd={handleResizeEnd}
+                    onTaskClick={handleTaskClick}
+                    onHover={handleTaskHover}
+                    onHoverEnd={handleTaskHoverEnd}
+                    startRow={viewport.rowRange().start}
+                    endRow={viewport.rowRange().end}
+                    startX={viewport.xRange().start}
+                    endX={viewport.xRange().end}
+                    rowLayouts={rowLayouts()}
+                />
             </GanttContainer>
 
             {/* Hover popup */}
             <TaskDataPopup
                 visible={popupVisible}
                 position={popupPosition}
-                task={hoveredTask as Accessor<GanttTask | null>}
-                barPosition={hoveredBarPosition as Accessor<BarPosition | null>}
+                task={hoveredTask}
+                barPosition={hoveredBarPosition}
             />
 
             {/* Click modal */}
             <TaskDataModal
                 visible={modalVisible}
-                task={modalTask as Accessor<GanttTask | null>}
-                barPosition={modalBarPosition as Accessor<BarPosition | null>}
+                task={modalTask}
+                barPosition={modalBarPosition}
                 relationships={modalRelationships}
                 onClose={handleModalClose}
             />
