@@ -1,0 +1,10 @@
+{
+    "scripts": {
+        "dev":       "vite --host --port 3000",
+        "dev2":      "tsc --noEmit && vite --host --port 3000",
+        "build":     "vite build ",
+        "typecheck": "tsc --noEmit",
+        "tc":        "tsc --noEmit"
+    },
+
+

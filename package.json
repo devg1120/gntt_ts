@@ -7,6 +7,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite --config config/vite/solid.js --host --port 3000",
+        "dev2": "tsc --noEmit && vite --config config/vite/solid.js --host --port 3000",
         "build": "vite build --config config/vite/solid.js",
         "build:demo": "vite build --config config/vite/demo.js",
         "preview:demo": "vite preview --config config/vite/demo.js --port 4173",

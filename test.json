@@ -1,11 +1,3 @@
-if [ $# -eq 0 ]; then
-    echo ./tcheck.sh  [filepath]
-    echo ./tcheck.sh src/components/Bar.tsx
-    exit 1
-fi
-
-
-cat << EOS > test.json
 {
   "compilerOptions": {
     "target": "ES2020",
@@ -27,10 +19,6 @@ cat << EOS > test.json
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["$1"],
+  "include": ["src/components/Bar.tsx"],
   "exclude": ["node_modules", "dist", "dist-demo"]
 }
-EOS
-
-npx tsc --p test.json  
-
