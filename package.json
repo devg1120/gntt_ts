@@ -15,6 +15,7 @@
         "bench": "node benchmarks/constraint/constraintBench.js",
         "bench:scaling": "node benchmarks/constraint/scalingTest.js",
         "typecheck": "tsc --noEmit",
+        "tc": "tsc --noEmit",
         "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
         "prettier": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\" \"tests/**/*.js\"",
         "prettier-check": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\" \"tests/**/*.js\""

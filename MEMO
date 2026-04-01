@@ -27,4 +27,8 @@ npx ts-migrate -- --help
 npx ts-migrate-full src
 
 
+===================================
+npm run tc
+
+./tcheck.sh  failepath
 
