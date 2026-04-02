@@ -267,24 +267,13 @@ export function createTaskStore(): TaskStore {
      * @param {string} taskId - Task ID to check
      * @returns {boolean}
      */
-    //const isTaskCollapsed = (taskId) => collapsedTasks().has(taskId);
-    const isTaskCollapsed = (taskId: string): boolean => collapsedTasks().has(taskId);
+    const isTaskCollapsed = (taskId) => collapsedTasks().has(taskId);
 
     /**
      * Explicitly expand a task (show its descendants).
      * @param {string} taskId - Task ID to expand
      */
-/*
     const expandTask = (taskId) => {
-        setCollapsedTasks((prev) => {
-            if (!prev.has(taskId)) return prev;
-            const next = new Set(prev);
-            next.delete(taskId);
-            return next;
-        });
-    };
-    */
-    const expandTask = (taskId: string): void => {
         setCollapsedTasks((prev) => {
             if (!prev.has(taskId)) return prev;
             const next = new Set(prev);
@@ -297,17 +286,7 @@ export function createTaskStore(): TaskStore {
      * Explicitly collapse a task (hide its descendants).
      * @param {string} taskId - Task ID to collapse
      */
-/*
     const collapseTask = (taskId) => {
-        setCollapsedTasks((prev) => {
-            if (prev.has(taskId)) return prev;
-            const next = new Set(prev);
-            next.add(taskId);
-            return next;
-        });
-    };
-    */
-    const collapseTask = (taskId: string): void => {
         setCollapsedTasks((prev) => {
             if (prev.has(taskId)) return prev;
             const next = new Set(prev);
@@ -319,32 +298,17 @@ export function createTaskStore(): TaskStore {
     /**
      * Expand all collapsed tasks.
      */
-/*
     const expandAllTasks = () => {
         setCollapsedTasks(new Set());
     };
-    */
-    const expandAllTasks = (): void => {
-        setCollapsedTasks(new Set<string>());
-    };
+
     /**
      * Collapse all summary tasks.
      */
-    /*
     const collapseAllTasks = () => {
         const summaryIds = [];
         for (const task of Object.values(tasks)) {
             if (task.type === 'summary' || (task._children && task._children.length > 0)) {
-                summaryIds.push(task.id);
-            }
-        }
-        setCollapsedTasks(new Set(summaryIds));
-    };
-*/
-    const collapseAllTasks = (): void => {
-        const summaryIds: string[] = [];
-        for (const task of Object.values(tasks)) {
-            if (task && (task.type === 'summary' || (task._children && task._children.length > 0))) {
                 summaryIds.push(task.id);
             }
         }

@@ -19,6 +19,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["src/components/Bar.tsx"],
+  "include": ["src/stores/taskStore.ts"],
   "exclude": ["node_modules", "dist", "dist-demo"]
 }
