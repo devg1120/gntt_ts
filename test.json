@@ -19,6 +19,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["src/utils/createVirtualViewport.ts"],
+  "include": ["src/utils/hierarchyProcessor.ts"],
   "exclude": ["node_modules", "dist", "dist-demo"]
 }
