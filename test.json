@@ -19,6 +19,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["src/stores/ganttConfigStore.ts"],
+  "include": ["src/stores/resourceStore.ts"],
   "exclude": ["node_modules", "dist", "dist-demo"]
 }
