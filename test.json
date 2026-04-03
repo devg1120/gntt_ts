@@ -19,6 +19,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["src/stores/resourceStore.ts"],
+  "include": ["src/utils/barCalculations.ts"],
   "exclude": ["node_modules", "dist", "dist-demo"]
 }

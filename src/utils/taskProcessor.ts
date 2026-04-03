@@ -2,10 +2,51 @@ import date_utils from './date_utils.js';
 import { computeX, computeY, computeWidth } from './barCalculations.js';
 import { detectCycles } from './constraintResolver.js';
 
+import type {
+    DependencyType,
+    Dependency,
+    NormalizedDependency,
+    Relationship,
+    BarPosition,
+    TaskConstraints,
+    NormalizedConstraints,
+    GanttTask,
+    ProcessedTask,
+} from '../types';
+
+interface ProcessConfig {
+    ganttStart: Date;
+    unit: string;
+    step: number;
+    columnWidth: number;
+    headerHeight?: number;
+    barHeight: number;
+    padding: number;
+}
+
+interface ProcessResult {
+    tasks: ProcessedTask[];
+    relationships: Relationship[];
+    resources: string[];
+}
+
+interface DateBounds {
+    minDate: Date;
+    maxDate: Date;
+}
+
 /**
  * Generate a unique ID for a task.
  */
+/*
 function generateTaskId(task, index) {
+    return `task-${task.name || ''}-${index}-${Date.now()}`.replace(
+        /\s+/g,
+        '-',
+    );
+}
+*/
+function generateTaskId(task: GanttTask, index: number): string {
     return `task-${task.name || ''}-${index}-${Date.now()}`.replace(
         /\s+/g,
         '-',
@@ -18,6 +59,7 @@ function generateTaskId(task, index) {
  * @param {string | Object | Array | undefined} dependencies
  * @returns {Array<{id: string, type: string, lag: number}>}
  */
+
 function parseDependencies(dependencies) {
     if (!dependencies) return [];
 
@@ -60,12 +102,41 @@ function parseDependencies(dependencies) {
     return [];
 }
 
+/*
+function parseDependencies(dependencies: Dependency[] | undefined): NormalizedDependency[] {
+    // No dependencies
+    if (!dependencies) return [];
+
+    // Type check: must be array
+    
+    if (!Array.isArray(dependencies)) {
+        console.warn(
+            'parseDependencies: dependencies must be an array, got:',
+            typeof dependencies,
+            dependencies
+        );
+        return [];
+    }
+
+    // Parse array of dependency objects
+    return dependencies
+        .filter((d): d is Dependency => d != null && typeof d === 'object' && typeof d.id === 'string')
+        .map((d) => ({
+            id: d.id,
+            type: d.type || 'FS',
+            lag: d.lag || 0,
+            max: d.max,  // Preserve max for gap behavior (undefined = elastic)
+        }));
+}
+*/
+
 /**
  * Process a single task - parse dates, validate, normalize.
  * @param {Object} task - Raw task object
  * @param {number} index - Task index
  * @returns {Object | null} - Processed task or null if invalid
  */
+/*
 export function processTask(task, index) {
     const processed = { ...task };
 
@@ -135,6 +206,78 @@ export function processTask(task, index) {
 
     return processed;
 }
+*/
+export function processTask(task, index) {
+    const processed = { ...task };
+
+    // Generate ID if missing
+    if (!processed.id) {
+        processed.id = generateTaskId(task, index);
+    }
+
+    // Parse start date
+    processed._start = date_utils.parse(task.start);
+
+    // Parse or calculate end date
+    if (task.end) {
+        processed._end = date_utils.parse(task.end);
+    } else if (task.duration) {
+        // Calculate end from duration
+        const { duration, scale } = date_utils.parse_duration(task.duration);
+        processed._end = date_utils.add(processed._start, duration, scale);
+    } else {
+        // Default to same day
+        processed._end = new Date(processed._start);
+    }
+
+    // Validate date range (max 10 years)
+    const yearDiff = date_utils.diff(processed._end, processed._start, 'year');
+    if (yearDiff > 10) {
+        console.error(`Task "${processed.name}" has duration > 10 years`);
+        return null;
+    }
+
+    // Ensure end is after start
+    if (processed._end < processed._start) {
+        console.warn(`Task "${processed.name}" has end before start, swapping`);
+        [processed._start, processed._end] = [processed._end, processed._start];
+    }
+
+    // Parse dependencies
+    processed.dependencies = parseDependencies(task.dependencies);
+
+    // Assign index
+    processed._index = index;
+
+    // Default progress
+    if (typeof processed.progress !== 'number') {
+        processed.progress = 0;
+    }
+    processed.progress = Math.max(0, Math.min(100, processed.progress));
+
+    // Default constraints
+    processed.constraints = {
+        locked: false,
+        ...task.constraints,
+    };
+
+    // Preserve hierarchy fields (parentId, type)
+    // These will be processed by buildHierarchy in Gantt.jsx
+    if (task.parentId !== undefined) {
+        processed.parentId = task.parentId;
+    }
+    if (task.type !== undefined) {
+        processed.type = task.type;
+    }
+
+    // Initialize hierarchy fields (will be populated by buildHierarchy)
+    processed._children = [];
+    processed._depth = 0;
+
+    return processed;
+}
+
+
 
 /**
  * Process all tasks and compute their initial positions.
