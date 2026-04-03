@@ -1,8 +1,6 @@
-//import { createSignal } from 'solid-js';
-import { createSignal, Accessor, Setter } from 'solid-js';
-
+import { createSignal } from 'solid-js';
 import { createStore, reconcile, produce } from 'solid-js/store';
-//import { prof } from '../perf/profiler.js';
+import { prof } from '../perf/profiler.js';
 
 
 import type { BarPosition, ProcessedTask } from '../types';
@@ -42,11 +40,9 @@ export interface TaskStore {
     expandAllTasks: () => void;
     collapseAllTasks: () => void;
 
-    //Drag state - for deferring expensive calculations
+    // Drag state - for deferring expensive calculations
     draggingTaskId: Accessor<string | null>;
     setDraggingTaskId: Setter<string | null>;
-    //draggingTaskId: string ;
-    //setDraggingTaskId: string ;
 }
 
 /**
@@ -57,7 +53,6 @@ export interface TaskStore {
 export function createTaskStore(): TaskStore {
     // Object of task ID to task data (includes position info)
     // Using createStore for fine-grained reactivity (path-level tracking)
-    //const [tasks, setTasks] = createStore<TaskMap>({});
     const [tasks, setTasks] = createStore<TaskMap>({});
 
     // Set of collapsed task IDs (tasks whose children are hidden)
@@ -72,18 +67,15 @@ export function createTaskStore(): TaskStore {
 
     // Get a specific task by ID
     // Accessing tasks[id] creates fine-grained dependency on just that task
-/*
-    const getTask = (id) => {
-        return tasks[id];
-    };
-*/
+    //const getTask = (id) => {
+    //    return tasks[id];
+    //};
     const getTask = (id: string): ProcessedTask | undefined => {
         return tasks[id];
     };
-
     // Get bar position for a task
     // Accessing tasks[id].$bar creates fine-grained dependency
- /*   
+    /*
     const getBarPosition = (id) => {
         const endProf = prof.start('taskStore.getBarPosition');
 
@@ -104,41 +96,34 @@ export function createTaskStore(): TaskStore {
         endProf();
         return result;
     };
-   */ 
-   
+    */
     const getBarPosition = (id: string): BarPositionWithIndex | null => {
-        //const endProf = prof.start('taskStore.getBarPosition');
+        const endProf = prof.start('taskStore.getBarPosition');
 
         const task = tasks[id];
-        if (!task || !task.$bar) {
-            //endProf();
+        if (!task || !task._bar) {
+            endProf();
             return null;
         }
 
         const result: BarPositionWithIndex = {
-            x: task.$bar.x,
-            y: task.$bar.y,
-            width: task.$bar.width,
-            height: task.$bar.height,
+            x: task._bar.x,
+            y: task._bar.y,
+            width: task._bar.width,
+            height: task._bar.height,
             index: task._index,
         };
 
-        //endProf();
+        endProf();
         return result;
     };
-    
-
     // Update task in store (replaces entire task)
-    /*
-    const updateTask = (id, taskData) => {
-        setTasks(id, taskData);
-    };
-*/
-
+    //const updateTask = (id, taskData) => {
+    //    setTasks(id, taskData);
+    //};
     const updateTask = (id: string, taskData: ProcessedTask): void => {
         setTasks(id, taskData);
     };
-
     // Update bar position for a task (fine-grained path update)
     /*
     const updateBarPosition = (id, position) => {
@@ -158,13 +143,16 @@ export function createTaskStore(): TaskStore {
         // Use produce for fine-grained update - only triggers subscribers to changed paths
         setTasks(
             produce((state) => {
-                if (state[id]) {
-                    state[id].$bar = { ...state[id].$bar, ...position };
+                const task = state[id];
+                if (task && task._bar) {
+                    state[id] = {
+                        ...task,
+                        _bar: { ...task._bar, ...position },
+                    };
                 }
             }),
         );
     };
-
     //  Batch update multiple tasks (typically on initial load)
     /*
     const updateTasks = (tasksArray) => {
@@ -175,7 +163,6 @@ export function createTaskStore(): TaskStore {
         setTasks(reconcile(tasksObj));
     };
     */
-    
     const updateTasks = (tasksArray: ProcessedTask[]): void => {
         const tasksObj: TaskMap = {};
         tasksArray.forEach((task) => {
@@ -184,41 +171,30 @@ export function createTaskStore(): TaskStore {
         setTasks(reconcile(tasksObj));
     };
 
-
     // Remove task from store
-/*
-    const removeTask = (id) => {
-        setTasks(id, undefined);
-    };
-*/
+    //const removeTask = (id) => {
+    //    setTasks(id, undefined);
+    //};
     const removeTask = (id: string): void => {
         setTasks(id, undefined);
     };
-
     // Clear all tasks
-/*
-    const clear = () => {
-        setTasks(reconcile({}));
-    };
-*/
-
+    //const clear = () => {
+    //    setTasks(reconcile({}));
+    //};
     const clear = (): void => {
         setTasks(reconcile({}));
     };
-
     // Get all tasks as array
-/*
-    const getAllTasks = () => {
-        return Object.values(tasks);
-    };
-*/
+    //const getAllTasks = () => {
+    //    return Object.values(tasks);
+    //};
     const getAllTasks = (): ProcessedTask[] => {
         return Object.values(tasks).filter((t): t is ProcessedTask => t !== undefined);
     };
 
     // Get task count (reads all keys, so subscribes to additions/removals)
-
-//    const taskCount = () => Object.keys(tasks).length;
+    //const taskCount = () => Object.keys(tasks).length;
     const taskCount = (): number => Object.keys(tasks).length;
 
     /**
@@ -241,24 +217,21 @@ export function createTaskStore(): TaskStore {
         );
     };
     */
-
     const batchMovePositions = (taskOriginals: Map<string, BatchOriginal>, deltaX: number): void => {
         setTasks(
             produce((state) => {
                 for (const [id, { originalX }] of taskOriginals) {
                     const task = state[id];
-                    if (task?.$bar) {
+                    if (task?._bar) {
                         state[id] = {
                             ...task,
-                            $bar: { ...task.$bar, x: originalX + deltaX },
+                            _bar: { ...task._bar, x: originalX + deltaX },
                         };
                     }
                 }
             }),
         );
     };
-
-
     // --- Subtask Collapse State ---
 
     /**
@@ -277,7 +250,7 @@ export function createTaskStore(): TaskStore {
             return next;
         });
     };
-*/
+    */
     const toggleTaskCollapse = (taskId: string): void => {
         setCollapsedTasks((prev) => {
             const next = new Set(prev);
@@ -289,8 +262,6 @@ export function createTaskStore(): TaskStore {
             return next;
         });
     };
-
-
     /**
      * Check if a task is collapsed.
      * @param {string} taskId - Task ID to check
@@ -312,8 +283,7 @@ export function createTaskStore(): TaskStore {
             return next;
         });
     };
-*/
-
+    */
     const expandTask = (taskId: string): void => {
         setCollapsedTasks((prev) => {
             if (!prev.has(taskId)) return prev;
@@ -336,7 +306,7 @@ export function createTaskStore(): TaskStore {
             return next;
         });
     };
-*/
+    */
     const collapseTask = (taskId: string): void => {
         setCollapsedTasks((prev) => {
             if (prev.has(taskId)) return prev;

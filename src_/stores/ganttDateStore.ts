@@ -1,80 +1,27 @@
-import { createSignal, createMemo, Accessor, Setter } from 'solid-js';
-import date_utils from '../utils/date_utils';
-import type { TimeScale } from '../utils/date_utils';
-import { DEFAULT_VIEW_MODES } from '../utils/defaults';
-import type { ViewMode, DateInfo } from '../types';
-
-interface TaskLike {
-    _start?: Date;
-    _end?: Date;
-    start?: string;
-    end?: string;
-}
-
-interface GanttDateStoreOptions {
-    ganttStart?: Date;
-    ganttEnd?: Date;
-    viewMode?: string;
-    view_mode?: string;
-    viewModes?: ViewMode[];
-    language?: string;
-    columnWidth?: number;
-    column_width?: number;
-}
-
-export interface GanttDateStore {
-    // Signals
-    ganttStart: Accessor<Date>;
-    ganttEnd: Accessor<Date>;
-    dates: Accessor<Date[]>;
-    viewMode: Accessor<ViewMode>;
-    viewModes: Accessor<ViewMode[]>;
-    language: Accessor<string>;
-
-    // Setters
-    setGanttStart: Setter<Date>;
-    setGanttEnd: Setter<Date>;
-    setViewMode: (mode: string | ViewMode) => void;
-    setLanguage: Setter<string>;
-
-    // Computed
-    dateCount: Accessor<number>;
-    unit: Accessor<TimeScale>;
-    step: Accessor<number>;
-    columnWidth: Accessor<number>;
-    gridWidth: Accessor<number>;
-    getAllDateInfos: Accessor<DateInfo[]>;
-
-    // Methods
-    setupDates: (tasks: TaskLike[], infinitePadding?: boolean) => void;
-    generateDates: () => void;
-    extendTimeline: (direction: 'left' | 'right', units?: number) => void;
-    changeViewMode: (mode: string | ViewMode) => void;
-    getDateInfo: (date: Date, index: number, lastDate?: Date | null) => DateInfo;
-    dateToX: (date: Date) => number;
-    xToDate: (x: number) => Date;
-}
+import { createSignal, createMemo } from 'solid-js';
+import date_utils from '../utils/date_utils.js';
+import { DEFAULT_VIEW_MODES } from '../utils/defaults.js';
 
 /**
  * Reactive store for timeline/date management.
  * Handles view mode, date generation, and timeline boundaries.
  */
-export function createGanttDateStore(options: GanttDateStoreOptions = {}): GanttDateStore {
+export function createGanttDateStore(options = {}) {
     // Timeline boundaries
-    const [ganttStart, setGanttStart] = createSignal<Date>(
+    const [ganttStart, setGanttStart] = createSignal(
         options.ganttStart || new Date(),
     );
-    const [ganttEnd, setGanttEnd] = createSignal<Date>(
+    const [ganttEnd, setGanttEnd] = createSignal(
         options.ganttEnd || new Date(),
     );
 
     // Generated date columns
-    const [dates, setDates] = createSignal<Date[]>([]);
+    const [dates, setDates] = createSignal([]);
 
     // View mode configuration
     const defaultViewMode =
         DEFAULT_VIEW_MODES.find((m) => m.name === 'Day') ||
-        DEFAULT_VIEW_MODES[3]!;
+        DEFAULT_VIEW_MODES[3];
 
     // Support both viewMode and view_mode options
     const initialViewModeName = options.viewMode || options.view_mode;
@@ -83,13 +30,13 @@ export function createGanttDateStore(options: GanttDateStoreOptions = {}): Gantt
           defaultViewMode
         : defaultViewMode;
 
-    const [viewMode, setViewModeSignal] = createSignal<ViewMode>(initialViewMode);
+    const [viewMode, setViewMode] = createSignal(initialViewMode);
 
     // Available view modes
-    const [viewModes] = createSignal<ViewMode[]>(options.viewModes || DEFAULT_VIEW_MODES);
+    const [viewModes] = createSignal(options.viewModes || DEFAULT_VIEW_MODES);
 
     // Language for date formatting
-    const [language, setLanguage] = createSignal<string>(options.language || 'en');
+    const [language, setLanguage] = createSignal(options.language || 'en');
 
     // Computed values
     const dateCount = createMemo(() => dates().length);
@@ -101,17 +48,11 @@ export function createGanttDateStore(options: GanttDateStoreOptions = {}): Gantt
     });
 
     // Unit and step accessors
-    const unit = createMemo<TimeScale>(() => {
-        const parsed = parsedStep();
-        return parsed?.scale || 'day';
-    });
-    const step = createMemo(() => {
-        const parsed = parsedStep();
-        return parsed?.duration || 1;
-    });
+    const unit = createMemo(() => parsedStep().scale);
+    const step = createMemo(() => parsedStep().duration);
 
     // Column width - use options override if provided, else view mode default
-    const [columnWidthOverride] = createSignal<number | null>(options.columnWidth || options.column_width || null);
+    const [columnWidthOverride] = createSignal(options.columnWidth || options.column_width || null);
     const columnWidth = createMemo(() => columnWidthOverride() || viewMode().column_width || 45);
 
     // Grid width in pixels
@@ -121,14 +62,14 @@ export function createGanttDateStore(options: GanttDateStoreOptions = {}): Gantt
      * Setup dates array from tasks and view mode.
      * Calculates ganttStart/ganttEnd from task dates and applies padding.
      */
-    const setupDates = (tasks: TaskLike[], infinitePadding = false): void => {
+    const setupDates = (tasks, infinitePadding = false) => {
         if (!tasks || tasks.length === 0) {
             // Default to today +/- padding
             const today = date_utils.today();
             const mode = viewMode();
-            const parsed = date_utils.parse_duration(mode.padding || '7d');
-            const duration = parsed?.duration || 7;
-            const scale = parsed?.scale || 'day';
+            const { duration, scale } = date_utils.parse_duration(
+                mode.padding || '7d',
+            );
 
             const start = date_utils.add(today, -duration, scale);
             const end = date_utils.add(today, duration, scale);
@@ -140,12 +81,12 @@ export function createGanttDateStore(options: GanttDateStoreOptions = {}): Gantt
         }
 
         // Find min/max dates from tasks
-        let minDate: Date | null = null;
-        let maxDate: Date | null = null;
+        let minDate = null;
+        let maxDate = null;
 
         for (const task of tasks) {
-            const taskStart = task._start || date_utils.parse(task.start || '');
-            const taskEnd = task._end || date_utils.parse(task.end || '');
+            const taskStart = task._start || date_utils.parse(task.start);
+            const taskEnd = task._end || date_utils.parse(task.end);
 
             if (!minDate || taskStart < minDate) minDate = taskStart;
             if (!maxDate || taskEnd > maxDate) maxDate = taskEnd;
@@ -153,12 +94,11 @@ export function createGanttDateStore(options: GanttDateStoreOptions = {}): Gantt
 
         // Apply padding from view mode
         const mode = viewMode();
-        const parsed = date_utils.parse_duration(mode.padding || '7d');
-        const padDuration = parsed?.duration || 7;
-        const padScale = parsed?.scale || 'day';
+        const { duration: padDuration, scale: padScale } =
+            date_utils.parse_duration(mode.padding || '7d');
 
-        let start = date_utils.add(minDate!, -padDuration, padScale);
-        let end = date_utils.add(maxDate!, padDuration, padScale);
+        let start = date_utils.add(minDate, -padDuration, padScale);
+        let end = date_utils.add(maxDate, padDuration, padScale);
 
         // For infinite padding, extend more
         if (infinitePadding) {
@@ -182,13 +122,13 @@ export function createGanttDateStore(options: GanttDateStoreOptions = {}): Gantt
     /**
      * Generate the dates array from ganttStart to ganttEnd.
      */
-    const generateDates = (): void => {
+    const generateDates = () => {
         const start = ganttStart();
         const end = ganttEnd();
         const stepVal = step();
         const unitVal = unit();
 
-        const newDates: Date[] = [];
+        const newDates = [];
         let current = new Date(start);
 
         while (current < end) {
@@ -201,8 +141,10 @@ export function createGanttDateStore(options: GanttDateStoreOptions = {}): Gantt
 
     /**
      * Extend timeline in a direction (for infinite padding).
+     * @param {'left' | 'right'} direction
+     * @param {number} units - Number of step units to add
      */
-    const extendTimeline = (direction: 'left' | 'right', units = 10): void => {
+    const extendTimeline = (direction, units = 10) => {
         const stepVal = step();
         const unitVal = unit();
 
@@ -224,15 +166,15 @@ export function createGanttDateStore(options: GanttDateStoreOptions = {}): Gantt
     /**
      * Change view mode by name or object.
      */
-    const changeViewMode = (mode: string | ViewMode): void => {
+    const changeViewMode = (mode) => {
         if (typeof mode === 'string') {
             const found = viewModes().find((m) => m.name === mode);
             if (found) {
-                setViewModeSignal(found);
+                setViewMode(found);
                 generateDates();
             }
         } else if (mode && mode.name) {
-            setViewModeSignal(mode);
+            setViewMode(mode);
             generateDates();
         }
     };
@@ -241,7 +183,7 @@ export function createGanttDateStore(options: GanttDateStoreOptions = {}): Gantt
      * Get date info for header rendering.
      * Returns x position and text for upper/lower headers.
      */
-    const getDateInfo = (date: Date, index: number, lastDate: Date | null = null): DateInfo => {
+    const getDateInfo = (date, index, lastDate = null) => {
         const mode = viewMode();
         const lang = language();
         const colWidth = columnWidth();
@@ -280,18 +222,15 @@ export function createGanttDateStore(options: GanttDateStoreOptions = {}): Gantt
     /**
      * Get all date infos for rendering headers.
      */
-    const getAllDateInfos = createMemo<DateInfo[]>(() => {
+    const getAllDateInfos = createMemo(() => {
         const allDates = dates();
-        const infos: DateInfo[] = [];
-        let lastDate: Date | null = null;
+        const infos = [];
+        let lastDate = null;
 
         for (let i = 0; i < allDates.length; i++) {
-            const date = allDates[i];
-            if (date) {
-                const info = getDateInfo(date, i, lastDate);
-                infos.push(info);
-                lastDate = date;
-            }
+            const info = getDateInfo(allDates[i], i, lastDate);
+            infos.push(info);
+            lastDate = allDates[i];
         }
 
         return infos;
@@ -300,7 +239,7 @@ export function createGanttDateStore(options: GanttDateStoreOptions = {}): Gantt
     /**
      * Convert a date to X pixel position.
      */
-    const dateToX = (date: Date): number => {
+    const dateToX = (date) => {
         const start = ganttStart();
         const stepVal = step();
         const unitVal = unit();
@@ -313,7 +252,7 @@ export function createGanttDateStore(options: GanttDateStoreOptions = {}): Gantt
     /**
      * Convert X pixel position to date.
      */
-    const xToDate = (x: number): Date => {
+    const xToDate = (x) => {
         const start = ganttStart();
         const stepVal = step();
         const unitVal = unit();

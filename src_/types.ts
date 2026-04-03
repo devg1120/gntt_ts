@@ -200,9 +200,7 @@ export interface ProcessedTask extends Omit<GanttTask, 'dependencies' | 'constra
     /** Subtask layout mode */
     subtaskLayout?: 'sequential' | 'parallel' | 'mixed';
     /** Computed bar position */
-    //_bar: BarPosition;
-    //_bar: BarPosition;
-    $bar: BarPosition;
+    _bar: BarPosition;
     /** Normalized dependencies (always array with defaults applied) */
     dependencies: NormalizedDependency[];
     /** Normalized constraints (always has locked field) */

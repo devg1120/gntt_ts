@@ -3,6 +3,66 @@
 
 import { prof } from '../perf/profiler.js';
 
+import type { TaskStore } from '../stores/taskStore';
+import type { BarPosition, DependencyType } from '../types';
+
+interface Point {
+    x: number;
+    y: number;
+}
+
+type AnchorType = 'auto' | 'top' | 'bottom' | 'left' | 'right' | 'center';
+type RoutingType = 'straight' | 'orthogonal';
+type HeadShape = 'chevron' | 'triangle' | 'diamond' | 'circle' | 'none';
+
+interface ArrowConfig {
+    startAnchor: AnchorType;
+    startOffset?: number;
+    endAnchor: AnchorType;
+    endOffset: number;
+    routing: RoutingType;
+    curveRadius: number;
+    headSize: number;
+    headShape: HeadShape;
+    headFill: boolean;
+    dependencyType: DependencyType;
+}
+
+interface PathResult {
+    linePath: string;
+    headPath: string;
+    endPoint: Point;
+}
+
+interface ArrowProps {
+    id?: string;
+    fromId?: string;
+    toId?: string;
+    from?: BarPosition;
+    to?: BarPosition;
+    taskStore?: TaskStore;
+    positionMap?: Map<string, BarPosition> | null;
+    dependencyType?: DependencyType;
+    startAnchor?: AnchorType;
+    endAnchor?: AnchorType;
+    startOffset?: number;
+    endOffset?: number;
+    routing?: RoutingType;
+    curveRadius?: number;
+    stroke?: string;
+    strokeWidth?: number;
+    strokeOpacity?: number;
+    strokeDasharray?: string;
+    strokeLinecap?: 'butt' | 'round' | 'square';
+    strokeLinejoin?: 'arcs' | 'bevel' | 'miter' | 'miter-clip' | 'round';
+    headShape?: HeadShape;
+    headSize?: number;
+    headFill?: boolean;
+    class?: string;
+}
+
+
+
 /**
  * Arrow Component - Decorative/Informative Only
  *
@@ -13,7 +73,7 @@ import { prof } from '../perf/profiler.js';
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════════
-
+/*
 const DEFAULTS = {
     // Anchoring
     START_ANCHOR: 'auto',
@@ -39,6 +99,32 @@ const DEFAULTS = {
     // Thresholds
     ALIGNMENT_THRESHOLD: 8, // pixels - threshold for "same level" detection
 };
+*/
+const DEFAULTS = {
+    // Anchoring
+    START_ANCHOR: 'auto' as AnchorType,
+    END_ANCHOR: 'auto' as AnchorType,
+    ANCHOR_OFFSET: 0.5,
+
+    // Path shape
+    ROUTING: 'orthogonal' as RoutingType,
+    CURVE_RADIUS: 5,
+
+    // Line style
+    STROKE: '#666',
+    STROKE_WIDTH: 1.4,
+    STROKE_OPACITY: 1,
+    STROKE_LINECAP: 'round' as const,
+    STROKE_LINEJOIN: 'round' as const,
+
+    // Arrow head
+    HEAD_SIZE: 5,
+    HEAD_SHAPE: 'chevron' as HeadShape,
+    HEAD_FILL: false,
+
+    // Thresholds
+    ALIGNMENT_THRESHOLD: 8, // pixels - threshold for "same level" detection
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ANCHOR POINT CALCULATION
@@ -47,7 +133,9 @@ const DEFAULTS = {
 /**
  * Calculate the x,y coordinates of an anchor point on a bar.
  */
-function getAnchorPoint(bar, anchor, offset = 0.5) {
+//function getAnchorPoint(bar, anchor, offset = 0.5) {
+function getAnchorPoint(bar: BarPosition, anchor: AnchorType, offset = 0.5): Point {
+
     const t = Math.max(0, Math.min(1, offset));
 
     switch (anchor) {

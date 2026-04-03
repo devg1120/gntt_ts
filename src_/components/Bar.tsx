@@ -8,6 +8,68 @@ import {
 import { useDrag, clamp } from '../hooks/useDrag.js';
 import { useGanttEvents } from '../contexts/GanttEvents.jsx';
 
+
+import type { TaskStore } from '../stores/taskStore';
+import type { GanttConfigStore } from '../stores/ganttConfigStore';
+import type { ProcessedTask, BarPosition, LockState } from '../types';
+
+
+interface TaskPosition {
+    y: number;
+    height?: number;
+}
+
+interface BatchOriginal {
+    originalX: number;
+}
+
+interface ConstrainedResult {
+    x?: number;
+}
+
+interface BarProps {
+    task: ProcessedTask | Accessor<ProcessedTask>;
+    taskStore?: TaskStore;
+    ganttConfig?: GanttConfigStore;
+    taskPosition?: TaskPosition | Accessor<TaskPosition | undefined>;
+    visible?: boolean;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    cornerRadius?: number;
+    readonly?: boolean;
+    readonlyDates?: boolean;
+    readonlyProgress?: boolean;
+    showExpectedProgress?: boolean;
+    columnWidth?: number;
+    ignoredPositions?: number[];
+    onCollectDependents?: (taskId: string) => Set<string>;
+    onCollectDescendants?: (taskId: string) => Set<string>;
+    onClampBatchDelta?: (batchOriginals: Map<string, BatchOriginal>, deltaX: number) => number;
+    onConstrainPosition?: (taskId: string, x: number, y: number) => ConstrainedResult | null;
+    onDateChange?: (taskId: string, position: { x: number; width: number }) => void;
+    onResizeEnd?: (taskId: string) => void;
+    onProgressChange?: (taskId: string, progress: number) => void;
+    onHover?: (taskId: string, clientX: number, clientY: number) => void;
+    onHoverEnd?: () => void;
+    onTaskClick?: (taskId: string, e: MouseEvent) => void;
+}
+
+interface TaskData {
+    id: string;
+    name: string;
+    color: string;
+    colorProgress: string;
+    progress: number;
+    locked: LockState;
+    invalid: boolean;
+    customClass: string;
+    hasChildren: boolean;
+    start: Date | string | null;
+    end: Date | string | null;
+}
+
 /**
  * SolidJS Bar Component
  *
@@ -21,7 +83,11 @@ import { useGanttEvents } from '../contexts/GanttEvents.jsx';
  *
  * Integrates with taskStore for reactive position updates.
  */
-export function Bar(props) {
+//export function Bar(props) {
+export function Bar(props: BarProps): JSX.Element {
+
+    console.log("Bar....");
+
     // Get event handlers from context (fallback to props for backwards compatibility)
     const events = useGanttEvents();
 
@@ -35,7 +101,10 @@ export function Bar(props) {
     // Get position directly from taskStore - plain function for virtualized components
     // Avoids memo subscription churn during scroll (similar to Arrow.jsx approach)
     // Store access creates fine-grained dependency in calling context
-    const getPosition = () => {
+    
+    //const getPosition = () => {
+    const getPosition = (): BarPosition => {
+
         if (props.taskStore && taskId()) {
             const task = props.taskStore.tasks[taskId()];
             if (task?.$bar) {
@@ -322,7 +391,9 @@ export function Bar(props) {
     // EVENT HANDLERS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    const handleBarMouseDown = (e) => {
+    //const handleBarMouseDown = (e) => {
+    const handleBarMouseDown = (e: MouseEvent): void => {
+
         if (readonly() || readonlyDates() || isLocked()) {
             return;
         }

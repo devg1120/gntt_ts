@@ -21,6 +21,60 @@ import { TaskDataPopup } from './TaskDataPopup.jsx';
 import { TaskDataModal } from './TaskDataModal.jsx';
 import { GanttEventsProvider } from '../contexts/GanttEvents.jsx';
 
+
+interface ContainerAPI {
+    scrollTo: (x: number, smooth?: boolean) => void;
+    getScrollLeft: () => number;
+    getScrollTop: () => number;
+    getContainerWidth: () => number;
+    getContainerHeight: () => number;
+    scrollLeftSignal?: Accessor<number>;
+    scrollTopSignal?: Accessor<number>;
+    containerWidthSignal?: Accessor<number>;
+    containerHeightSignal?: Accessor<number>;
+}
+
+interface ArrowConfigOptions {
+    stroke?: string;
+    curveRadius?: number;
+    headShape?: string;
+    headSize?: number;
+}
+
+interface GanttOptions {
+    view_mode?: string;
+    scroll_to?: 'start' | 'today' | string;
+    upper_header_height?: number;
+    lower_header_height?: number;
+    resource_column_width?: number;
+    arrow_color?: string;
+    arrow_curve?: number;
+    arrow_head_shape?: string;
+    arrow_head_size?: number;
+    lines?: 'horizontal' | 'vertical' | 'both' | 'none';
+    readonly?: boolean;
+    bar_height?: number;
+    padding?: number;
+    column_width?: number;
+    [key: string]: unknown;
+}
+
+interface GanttProps {
+    tasks: GanttTask[];
+    resources?: ResourceInput[];
+    options?: GanttOptions;
+    arrowConfig?: ArrowConfigOptions;
+    taskLayerMode?: 'minimal' | 'full';
+    arrowRenderer?: 'batched' | 'individual';
+    overscanCols?: number;
+    overscanRows?: number;
+    overscanX?: number;
+    onDateChange?: (taskId: string, position: { x: number; width: number }) => void;
+    onProgressChange?: (taskId: string, progress: number) => void;
+    onResizeEnd?: (taskId: string) => void;
+    onTaskClick?: (taskId: string, event: MouseEvent) => void;
+}
+
 /**
  * Gantt - Main orchestrator component for the Gantt chart.
  *
@@ -31,7 +85,9 @@ import { GanttEventsProvider } from '../contexts/GanttEvents.jsx';
  * @param {Function} props.onProgressChange - Callback when task progress changes
  * @param {Function} props.onTaskClick - Callback when task is clicked
  */
-export function Gantt(props) {
+//export function Gantt(props) {
+export function Gantt(props: GanttProps): JSX.Element {
+
     // Create stores
     const taskStore = createTaskStore();
     const ganttConfig = createGanttConfigStore(props.options || {});
@@ -252,7 +308,9 @@ export function Gantt(props) {
     // Compute row layouts based on render mode
     // Simple mode: static heights, maximum performance
     // Detailed mode: variable heights based on expanded tasks
-    const rowLayouts = createMemo(() => {
+
+    //const rowLayouts = createMemo(() => {
+    const rowLayouts = createMemo((): Map<string, RowLayout> => {
         const resources = resourceStore.displayResources();
         const mode = ganttConfig.renderMode();
 
@@ -387,7 +445,8 @@ export function Gantt(props) {
         setModalTaskId(null);
     };
 
-    const handleContainerReady = (api) => {
+    //const handleContainerReady = (api) => {
+    const handleContainerReady = (api: ContainerAPI): void => {
         setContainerApi(api);
 
         // Initialize viewport dimensions
