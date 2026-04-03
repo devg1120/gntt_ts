@@ -19,6 +19,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["src/utils/barCalculations.ts"],
+  "include": ["src/utils/createVirtualViewport.ts"],
   "exclude": ["node_modules", "dist", "dist-demo"]
 }
