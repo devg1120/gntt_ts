@@ -19,6 +19,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["src/utils/hierarchyProcessor.ts"],
+  "include": ["src/utils/constraintResolver.ts"],
   "exclude": ["node_modules", "dist", "dist-demo"]
 }

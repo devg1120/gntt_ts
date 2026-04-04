@@ -59,7 +59,7 @@ function generateTaskId(task: GanttTask, index: number): string {
  * @param {string | Object | Array | undefined} dependencies
  * @returns {Array<{id: string, type: string, lag: number}>}
  */
-
+/*
 function parseDependencies(dependencies) {
     if (!dependencies) return [];
 
@@ -101,34 +101,51 @@ function parseDependencies(dependencies) {
 
     return [];
 }
-
-/*
+*/
+//function parseDependencies(dependencies) {
 function parseDependencies(dependencies: Dependency[] | undefined): NormalizedDependency[] {
-    // No dependencies
+
     if (!dependencies) return [];
 
-    // Type check: must be array
-    
-    if (!Array.isArray(dependencies)) {
-        console.warn(
-            'parseDependencies: dependencies must be an array, got:',
-            typeof dependencies,
-            dependencies
-        );
-        return [];
+    // Object with constraint metadata: { id, type, lag }
+    if (typeof dependencies === 'object' && !Array.isArray(dependencies)) {
+        return [
+            {
+                id: dependencies.id,
+                type: dependencies.type || 'FS',
+                lag: dependencies.lag || 0,
+            },
+        ];
     }
 
-    // Parse array of dependency objects
-    return dependencies
-        .filter((d): d is Dependency => d != null && typeof d === 'object' && typeof d.id === 'string')
-        .map((d) => ({
-            id: d.id,
-            type: d.type || 'FS',
-            lag: d.lag || 0,
-            max: d.max,  // Preserve max for gap behavior (undefined = elastic)
-        }));
+    // String: simple task ID (FS, lag=0) - can be comma-separated
+    if (typeof dependencies === 'string') {
+        return dependencies
+            .split(',')
+            .map((d) => d.trim())
+            .filter((d) => d.length > 0)
+            .map((id) => ({ id, type: 'FS', lag: 0 }));
+    }
+
+    // Array: mixed format (strings or objects)
+    if (Array.isArray(dependencies)) {
+        return dependencies
+            .filter((d) => d)
+            .map((d) => {
+                if (typeof d === 'string') {
+                    return { id: d, type: 'FS', lag: 0 };
+                }
+                return {
+                    id: d.id,
+                    type: d.type || 'FS',
+                    lag: d.lag || 0,
+                };
+            });
+    }
+
+    return [];
 }
-*/
+
 
 /**
  * Process a single task - parse dates, validate, normalize.
@@ -207,7 +224,10 @@ export function processTask(task, index) {
     return processed;
 }
 */
-export function processTask(task, index) {
+
+//export function processTask(task, index) {
+export function processTask(task: GanttTask, index: number): Omit<ProcessedTask, '_bar' | '_resourceIndex' | '_isHidden'> | null {
+
     const processed = { ...task };
 
     // Generate ID if missing
@@ -286,6 +306,8 @@ export function processTask(task, index) {
  * @param {Map<string, number>} [externalResourceIndexMap] - Optional resource index map from resourceStore
  * @returns {{tasks: Object[], relationships: Object[], resources: string[]}}
  */
+
+/*
 export function processTasks(tasks, config, externalResourceIndexMap = null) {
     const processedTasks = [];
     const relationships = [];
@@ -390,15 +412,151 @@ export function processTasks(tasks, config, externalResourceIndexMap = null) {
 
     return { tasks: processedTasks, relationships, resources };
 }
+*/
 
+//export function processTasks(tasks, config, externalResourceIndexMap = null) {
+export function processTasks(
+    tasks: GanttTask[],
+    config: ProcessConfig,
+    externalResourceIndexMap: Map<string, number> | null = null
+): ProcessResult {
+
+
+    const processedTasks = [];
+    const relationships = [];
+
+    // First pass: process tasks
+    for (let i = 0; i < tasks.length; i++) {
+        const processed = processTask(tasks[i], i);
+        if (processed) {
+            processedTasks.push(processed);
+        }
+    }
+
+    // Build resource list - unique resources in order of first appearance
+    // Used for backward compatibility when no resourceStore is provided
+    const resourceSet = new Set();
+    const resources = [];
+    for (const task of processedTasks) {
+        const resource = task.resource || 'Unassigned';
+        if (!resourceSet.has(resource)) {
+            resourceSet.add(resource);
+            resources.push(resource);
+        }
+    }
+
+    // Use external resource index map if provided, otherwise build from tasks
+    // External map comes from resourceStore and respects collapse state
+    let resourceIndex;
+    if (externalResourceIndexMap) {
+        resourceIndex = externalResourceIndexMap;
+    } else {
+        resourceIndex = new Map();
+        resources.forEach((r, i) => resourceIndex.set(r, i));
+    }
+
+    // Second pass: compute positions and build relationships
+    for (const task of processedTasks) {
+        // Get row index based on resource (swimlane layout)
+        const resource = task.resource || 'Unassigned';
+        const rowIndex = resourceIndex.get(resource);
+
+        // Handle case where resource is not in map (e.g., collapsed group)
+        // Use -1 to indicate hidden/off-screen
+        const effectiveRowIndex = rowIndex !== undefined ? rowIndex : -1;
+        const isHidden = effectiveRowIndex < 0;
+
+        // Compute bar position
+        const x = computeX(
+            task._start,
+            config.ganttStart,
+            config.unit,
+            config.step,
+            config.columnWidth,
+        );
+
+        // Use negative Y for hidden tasks (won't be rendered by TaskLayer)
+        const y = isHidden
+            ? -1000
+            : computeY(effectiveRowIndex, config.barHeight, config.padding);
+
+        const width = computeWidth(
+            task._start,
+            task._end,
+            config.unit,
+            config.step,
+            config.columnWidth,
+        );
+
+        // Store position on task
+        task.$bar = {
+            x,
+            y,
+            width,
+            height: config.barHeight,
+        };
+        task._resourceIndex = effectiveRowIndex;
+        task._isHidden = isHidden;
+
+        // Build relationships from dependencies
+        for (const dep of task.dependencies) {
+            // Find the predecessor task
+            const predecessor = processedTasks.find((t) => t.id === dep.id);
+            if (predecessor) {
+                relationships.push({
+                    from: dep.id, // Predecessor task ID
+                    to: task.id, // Successor task ID
+                    type: dep.type || 'FS',
+                    lag: dep.lag || 0,
+                    elastic: true, // Elastic = minimum distance constraint
+                });
+            }
+        }
+    }
+
+    // Check for cycles in dependency graph
+    const cycleResult = detectCycles(relationships);
+    if (cycleResult.hasCycle) {
+        console.warn(
+            `Circular dependency detected: ${cycleResult.cycle.join(' → ')}`,
+            '\nThis may cause unexpected behavior during task dragging.'
+        );
+    }
+
+    return { tasks: processedTasks, relationships, resources };
+}
 /**
  * Find min and max dates from tasks.
  * @param {Object[]} tasks - Processed tasks with _start and _end
  * @returns {{minDate: Date, maxDate: Date}}
  */
+/*
 export function findDateBounds(tasks) {
     let minDate = null;
     let maxDate = null;
+
+    for (const task of tasks) {
+        const start = task._start;
+        const end = task._end;
+
+        if (!minDate || start < minDate) minDate = start;
+        if (!maxDate || end > maxDate) maxDate = end;
+    }
+
+    return {
+        minDate: minDate || new Date(),
+        maxDate: maxDate || new Date(),
+    };
+}
+*/
+
+interface TaskWithDates {
+    _start: Date;
+    _end: Date;
+}
+export function findDateBounds(tasks: TaskWithDates[]): DateBounds {
+    let minDate: Date | null = null;
+    let maxDate: Date | null = null;
 
     for (const task of tasks) {
         const start = task._start;
@@ -419,6 +577,7 @@ export function findDateBounds(tasks) {
  * @param {Object[]} tasks - Processed tasks
  * @returns {Map<string, string[]>} - Map of task ID to dependent task IDs
  */
+/*
 export function buildDependencyMap(tasks) {
     const map = new Map();
 
@@ -434,7 +593,28 @@ export function buildDependencyMap(tasks) {
 
     return map;
 }
+*/
 
+interface TaskWithDependencies {
+    id: string;
+    dependencies: NormalizedDependency[];
+}
+
+export function buildDependencyMap(tasks: TaskWithDependencies[]): Map<string, string[]> {
+    const map = new Map<string, string[]>();
+
+    for (const task of tasks) {
+        for (const dep of task.dependencies) {
+            const depId = dep.id;
+            if (!map.has(depId)) {
+                map.set(depId, []);
+            }
+            map.get(depId)!.push(task.id);
+        }
+    }
+
+    return map;
+}
 export default {
     processTask,
     processTasks,
