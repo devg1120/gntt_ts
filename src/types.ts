@@ -227,6 +227,9 @@ export interface Relationship {
     max?: number;
     /** Whether this is an elastic constraint (can grow but not shrink) */
     elastic?: boolean;
+
+    predecessorId: string;
+    successorId: string;
 }
 
 /**

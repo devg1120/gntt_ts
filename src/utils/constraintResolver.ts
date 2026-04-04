@@ -14,11 +14,26 @@
  *   type: 'FS'|'SS'|'FF'|'SF',  // Dependency type (default: 'FS')
  *   lag: number,       // Time offset (positive = delay, negative = lead)
  *   elastic: boolean   // If true, lag is minimum; if false, lag is fixed
+ *
  * }
  *
  * Tasks can have:
  * - locked: Task cannot move (blocks push/pull from relationships)
  */
+
+import type {
+    DependencyType,
+    Dependency,
+    NormalizedDependency,
+    Relationship,
+    BarPosition,
+    TaskConstraints,
+    NormalizedConstraints,
+    GanttTask,
+    ProcessedTask,
+} from '../types';
+
+import type { TaskStore } from "../stores/taskStore"
 
 // Dependency type constants
 export const DEPENDENCY_TYPES = {
@@ -40,13 +55,14 @@ export const DEFAULT_LAG = 0;
  * @param {Array} relationships - Array of relationship objects with from/to fields
  * @returns {{ hasCycle: boolean, cycle: string[]|null }} Result with cycle path if found
  */
-
+/*
 interface Relationship {
     from : string,
     to: string,
     predecessorId: string,
     successorId: string,
 }
+*/
 
 //export function detectCycles(relationships) {
 export function detectCycles(relationships: Relationship[]) {
@@ -91,7 +107,7 @@ export function detectCycles(relationships: Relationship[]) {
 
             // Initialize iterator on first visit
             if (current?.iterator === null) {
-                current.iterator = 0;
+                current.iterator = 0 as any;
             }
 
             let foundUnvisited = false;
@@ -108,8 +124,8 @@ export function detectCycles(relationships: Relationship[]) {
                     // Reconstruct cycle path
                     const cycle = [neighbor];
                     for (let i = stack.length - 1; i >= 0; i--) {
-                        cycle.unshift(stack[i].node);
-                        if (stack[i].node === neighbor) break;
+                          cycle.unshift(stack[i]!.node);
+                          if (stack[i]!.node === neighbor) break;
                     }
                     return { hasCycle: true, cycle };
                 }
@@ -146,7 +162,7 @@ export function detectCycles(relationships: Relationship[]) {
  * @param {Set} visited - Already visited task IDs (for recursion)
  * @returns {Array} Array of { taskId, relationship } objects
  */
-export function findFixedLinks(taskId, relationships, visited = new Set()) {
+export function findFixedLinks(taskId : string, relationships: Relationship[], visited = new Set()) {
     // Use iterative BFS to avoid stack overflow with long dependency chains
     const linked = [];
     const queue = [taskId];
@@ -186,11 +202,11 @@ export function findFixedLinks(taskId, relationships, visited = new Set()) {
  * @returns {number} Minimum allowed X position for successor
  */
 export function calculateMinSuccessorX(
-    type,
-    predTask,
-    succTask,
-    lagPx,
-    predNewX = null,
+    type : string,
+    predTask : ProcessedTask,
+    succTask : ProcessedTask,
+    lagPx : number,
+    predNewX : any = null,
 ) {
     const predX = predNewX ?? predTask.$bar.x;
     const predWidth = predTask.$bar.width;
@@ -236,11 +252,11 @@ export function calculateMinSuccessorX(
  * @returns {number} Exact X position for successor
  */
 export function calculateFixedSuccessorX(
-    type,
-    predTask,
-    succTask,
-    lagPx,
-    predNewX = null,
+    type : string,
+    predTask : ProcessedTask,
+    succTask : ProcessedTask,
+    lagPx : number,
+    predNewX : any = null,
 ) {
     // For fixed relationships, the successor position IS the minimum position
     // (exact distance maintained)
@@ -257,7 +273,15 @@ export function calculateFixedSuccessorX(
  * @param {number} predNewX - New X position for predecessor
  * @returns {number} Amount to push successor (0 if no push needed)
  */
-export function calculatePushAmount(type, predTask, succTask, lagPx, predNewX) {
+export function calculatePushAmount(
+//	type, predTask, succTask, lagPx, predNewX
+    type : string,
+    predTask : ProcessedTask,
+    succTask : ProcessedTask,
+    lagPx : number,
+    predNewX : any = null,
+
+) {
     const minSuccX = calculateMinSuccessorX(
         type,
         predTask,
@@ -291,11 +315,11 @@ export function calculatePushAmount(type, predTask, succTask, lagPx, predNewX) {
  *   - null if movement is blocked (locked task or cycle detected)
  */
 export function resolveMovement(
-    taskId,
-    newX,
-    newY,
-    taskStore,
-    relationships,
+    taskId : string,
+    newX : number,
+    newY : number,
+    taskStore : TaskStore,
+    relationships : Relationship[],
     options = {},
     visited = new Set(),
 ) {
@@ -309,6 +333,7 @@ export function resolveMovement(
     const newVisited = new Set(visited);
     newVisited.add(taskId);
 
+    //const { pixelsPerTimeUnit = 1 } = options;
     const { pixelsPerTimeUnit = 1 } = options;
 
     const task = taskStore.getTask(taskId);
@@ -409,7 +434,7 @@ export function resolveMovement(
                             y: result.y,
                         });
                     } else if (result?.type === 'batch') {
-                        result.updates.forEach((update) => {
+                        result.updates!.forEach((update) => {
                             taskStore.updateBarPosition(update.taskId, {
                                 x: update.x,
                                 y: update.y,
@@ -450,11 +475,11 @@ export function resolveMovement(
  * @returns {number} Maximum allowed X position for predecessor
  */
 export function calculateMaxPredecessorX(
-    type,
-    predTask,
-    succTask,
-    lagPx,
-    succX,
+    type : string,
+    predTask : ProcessedTask,
+    succTask : ProcessedTask,
+    lagPx : number,
+    succX : number,
 ) {
     const predWidth = predTask.$bar.width;
     const succWidth = succTask.$bar.width;
@@ -498,9 +523,9 @@ export function calculateMaxPredecessorX(
  * @returns {number} The clamped deltaX (may be less negative than proposed)
  */
 export function clampBatchDeltaX(
-    batchOriginals,
-    proposedDeltaX,
-    relationships,
+    batchOriginals : number,
+    proposedDeltaX : number,
+    relationships : Relationship[],
     getTask,
     options = {},
 ) {
@@ -513,7 +538,7 @@ export function clampBatchDeltaX(
     const batchTaskIds = new Set(batchOriginals.keys());
 
     // For each task in the batch, check if it has a predecessor OUTSIDE the batch
-    for (const [taskId, { originalX }] of batchOriginals) {
+    for (const [taskId  , { originalX }] of batchOriginals) {
         const task = getTask(taskId);
         if (!task?.$bar) continue;
 
@@ -581,10 +606,11 @@ export function clampBatchDeltaX(
  * @returns {Set<string>} Set of task IDs including the original
  */
 export function collectDependentTasks(
-    taskId,
-    relationships,
+    taskId : string,
+    relationships : Relationship[],
     getTask = null,
     visited = new Set(),
+
 ) {
     // Use iterative BFS to avoid stack overflow with long dependency chains
     const queue = [taskId];
@@ -625,9 +651,9 @@ export function collectDependentTasks(
  * @param {Object} options - Optional configuration
  */
 export function resolveAfterResize(
-    taskId,
-    taskStore,
-    relationships,
+    taskId : string,
+    taskStore : TaskStore,
+    relationships : Relationship[],
     options = {},
 ) {
     const { pixelsPerTimeUnit = 1 } = options;
