@@ -323,6 +323,7 @@ export function resolveMovement(
     options = {},
     visited = new Set(),
 ) {
+
     // Cycle detection: if we're already resolving this task, we've hit a cycle
     if (visited.has(taskId)) {
         console.warn(`Cycle detected in dependency chain involving task: ${taskId}`);
@@ -334,7 +335,7 @@ export function resolveMovement(
     newVisited.add(taskId);
 
     //const { pixelsPerTimeUnit = 1 } = options;
-    const { pixelsPerTimeUnit = 1 } = options;
+    const  pixelsPerTimeUnit = 1 ;
 
     const task = taskStore.getTask(taskId);
     if (!task) return null;
@@ -523,16 +524,18 @@ export function calculateMaxPredecessorX(
  * @returns {number} The clamped deltaX (may be less negative than proposed)
  */
 export function clampBatchDeltaX(
-    batchOriginals : number,
+    batchOriginals : Map<string, { originalX:number}>,
     proposedDeltaX : number,
     relationships : Relationship[],
-    getTask,
+    getTask : any,
     options = {},
 ) {
     // Only need to clamp when moving backward
     if (proposedDeltaX >= 0) return proposedDeltaX;
 
-    const { pixelsPerTimeUnit = 1 } = options;
+    //const { pixelsPerTimeUnit = 1 } = options;
+    const  pixelsPerTimeUnit = 1 ;
+
     let minAllowedDelta = proposedDeltaX;
 
     const batchTaskIds = new Set(batchOriginals.keys());
@@ -608,8 +611,9 @@ export function clampBatchDeltaX(
 export function collectDependentTasks(
     taskId : string,
     relationships : Relationship[],
-    getTask = null,
-    visited = new Set(),
+    //getTask : (id: string) => ProcessedTask,
+    getTask : any,
+    visited : any = new Set(),
 
 ) {
     // Use iterative BFS to avoid stack overflow with long dependency chains
@@ -656,7 +660,8 @@ export function resolveAfterResize(
     relationships : Relationship[],
     options = {},
 ) {
-    const { pixelsPerTimeUnit = 1 } = options;
+    //const { pixelsPerTimeUnit = 1 } = options;
+    const pixelsPerTimeUnit = 1 ;
     const task = taskStore.getTask(taskId);
     if (!task) return;
 
@@ -697,7 +702,7 @@ export function resolveAfterResize(
                         y: result.y,
                     });
                 } else if (result?.type === 'batch') {
-                    result.updates.forEach((update) => {
+                    result.updates!.forEach((update) => {
                         taskStore.updateBarPosition(update.taskId, {
                             x: update.x,
                             y: update.y,
