@@ -19,6 +19,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["src/utils/constraintResolver.ts"],
+  "include": ["src/utils/taskProcessor.ts"],
   "exclude": ["node_modules", "dist", "dist-demo"]
 }
