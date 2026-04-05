@@ -229,7 +229,7 @@ export function processTask(task, index) {
 
 //export function processTask(task, index) {
 //export function processTask(task: GanttTask, index: number): Omit<ProcessedTask, '_bar' | '_resourceIndex' | '_isHidden'> | null {
-export function processTask(task: ProcessedTask, index: number): Omit<ProcessedTask, '_bar' | '_resourceIndex' | '_isHidden'> | null {
+export function processTask(task: ProcessedTask , index: number): Omit<ProcessedTask, '_bar' | '_resourceIndex' | '_isHidden'> | null {
 
     const processed : ProcessedTask = { ...task };
     //const processed : any = { ...task };   // GUSA any
@@ -251,7 +251,7 @@ export function processTask(task: ProcessedTask, index: number): Omit<ProcessedT
         //const { duration, scale } = date_utils.parse_duration(task.duration);
         //processed._end = date_utils.add(processed._start, duration, scale);
 
-        const result = date_utils.parse_duration(task.duration);
+        const result = date_utils.parse_duration(task.duration);   //GUSA
 	if ( result !== undefined) {
             const { duration, scale } = result;
             processed._end = date_utils.add(processed._start, duration, scale);
@@ -289,10 +289,18 @@ export function processTask(task: ProcessedTask, index: number): Omit<ProcessedT
     processed.progress = Math.max(0, Math.min(100, processed.progress));
 
     // Default constraints
+    /* GUSA
     processed.constraints = {
         locked: false,
         ...task.constraints,
     };
+*/
+
+    processed.constraints = {
+        ...task.constraints,
+    };
+    processed.constraints.locked = false;
+
 
     // Preserve hierarchy fields (parentId, type)
     // These will be processed by buildHierarchy in Gantt.jsx
@@ -429,18 +437,19 @@ export function processTasks(tasks, config, externalResourceIndexMap = null) {
 
 //export function processTasks(tasks, config, externalResourceIndexMap = null) {
 export function processTasks(
-    tasks: GanttTask[],
+    //tasks: GanttTask[],
+    tasks: ProcessedTask[],
     config: ProcessConfig,
     externalResourceIndexMap: Map<string, number> | null = null
 ): ProcessResult {
 
 
-    const processedTasks = [];
-    const relationships = [];
+    const processedTasks : ProcessedTask[]= [];
+    const relationships : Relationship[] = [];
 
     // First pass: process tasks
     for (let i = 0; i < tasks.length; i++) {
-        const processed = processTask(tasks[i], i);
+        const processed = processTask(tasks[i]!, i);
         if (processed) {
             processedTasks.push(processed);
         }
@@ -460,7 +469,7 @@ export function processTasks(
 
     // Use external resource index map if provided, otherwise build from tasks
     // External map comes from resourceStore and respects collapse state
-    let resourceIndex;
+    let resourceIndex : Map<string, number>;
     if (externalResourceIndexMap) {
         resourceIndex = externalResourceIndexMap;
     } else {
