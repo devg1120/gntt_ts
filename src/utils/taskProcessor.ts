@@ -229,7 +229,8 @@ export function processTask(task, index) {
 
 //export function processTask(task, index) {
 //export function processTask(task: GanttTask, index: number): Omit<ProcessedTask, '_bar' | '_resourceIndex' | '_isHidden'> | null {
-export function processTask(task: ProcessedTask , index: number): Omit<ProcessedTask, '_bar' | '_resourceIndex' | '_isHidden'> | null {
+//export function processTask(task: ProcessedTask , index: number): Omit<ProcessedTask, '_bar' | '_resourceIndex' | '_isHidden'> | null {
+export function processTask(task: ProcessedTask , index: number): any {
 
     const processed : ProcessedTask = { ...task };
     //const processed : any = { ...task };   // GUSA any
@@ -531,6 +532,8 @@ export function processTasks(
                     type: dep.type || 'FS',
                     lag: dep.lag || 0,
                     elastic: true, // Elastic = minimum distance constraint
+		    predecessorId: "",
+		    successorId: "",
                 });
             }
         }
@@ -540,7 +543,7 @@ export function processTasks(
     const cycleResult = detectCycles(relationships);
     if (cycleResult.hasCycle) {
         console.warn(
-            `Circular dependency detected: ${cycleResult.cycle.join(' → ')}`,
+            `Circular dependency detected: ${cycleResult.cycle?.join(' → ')}`,
             '\nThis may cause unexpected behavior during task dragging.'
         );
     }
