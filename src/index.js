@@ -4,6 +4,9 @@
  * Main exports for the Gantt chart library.
  */
 
+import from "./styles/gantt.css";
+import from "./styles/light.css";
+
 // Main component
 export { Gantt } from './components/Gantt.jsx';
 
