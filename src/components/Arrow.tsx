@@ -717,6 +717,7 @@ function generatePath(from: BarPosition, to: BarPosition, config: ArrowConfig): 
  * Renders line and arrow head as separate paths for proper fill support.
  */
 export function Arrow(props: ArrowProps): JSX.Element {
+
     // Get bar position - prefer positionMap (batch cached) over getBarPosition (per-call)
     // positionMap eliminates 184K getBarPosition calls during V-scroll
     const getAdjustedPosition = (taskId: string): BarPosition | null => {
