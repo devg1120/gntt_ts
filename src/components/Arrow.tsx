@@ -804,7 +804,8 @@ export function Arrow(props: ArrowProps): JSX.Element {
     const fromTaskIsExpanded = () => false;
 
     // Config accessor - plain function to avoid subscription cascades
-    const config = () => {
+    const config = () =>  {
+    //const config = () :ArrowConfig => {
         const isExpanded = fromTaskIsExpanded();
 
         // For expanded containers, force 'right' anchor (override 'auto')
@@ -831,8 +832,8 @@ export function Arrow(props: ArrowProps): JSX.Element {
     // Path generation - plain function (not memo)
     // Memoization creates reactive subscriptions that cascade during scroll
     const paths = () => {
-        const from = fromPosition();
-        const to = toPosition();
+        const from: any = fromPosition();
+        const to: any = toPosition();
 
         if (!from || !to) return { linePath: '', headPath: '' };
 
