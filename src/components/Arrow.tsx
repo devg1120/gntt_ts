@@ -1,7 +1,7 @@
 // Note: createMemo was attempted for optimization but created reactive cascades
 // that hurt scroll performance. Plain functions work better here.
 
-import { prof } from '../perf/profiler.js';
+//import { prof } from '../perf/profiler.js';
 
 /**
  * Arrow Component - Decorative/Informative Only
@@ -9,6 +9,67 @@ import { prof } from '../perf/profiler.js';
  * A pure visual renderer for dependency arrows between task bars.
  * Successor must be to the RIGHT of predecessor (no backward arrows).
  */
+
+import { JSX } from 'solid-js';
+
+import type { TaskStore } from '../stores/taskStore';
+import type { BarPosition, DependencyType } from '../types';
+
+interface Point {
+    x: number;
+    y: number;
+}
+
+type AnchorType = 'auto' | 'top' | 'bottom' | 'left' | 'right' | 'center';
+type RoutingType = 'straight' | 'orthogonal';
+type HeadShape = 'chevron' | 'triangle' | 'diamond' | 'circle' | 'none';
+
+
+interface ArrowConfig {
+    startAnchor: AnchorType;
+    startOffset?: number;
+    endAnchor: AnchorType;
+    endOffset: number;
+    routing: RoutingType;
+    curveRadius: number;
+    headSize: number;
+    headShape: HeadShape;
+    headFill: boolean;
+    dependencyType: DependencyType;
+}
+
+interface PathResult {
+    linePath: string;
+    headPath: string;
+    endPoint: Point;
+}
+
+interface ArrowProps {
+    id?: string;
+    fromId?: string;
+    toId?: string;
+    from?: BarPosition;
+    to?: BarPosition;
+    taskStore?: TaskStore;
+    positionMap?: Map<string, BarPosition> | null;
+    dependencyType?: DependencyType;
+    startAnchor?: AnchorType;
+    endAnchor?: AnchorType;
+    startOffset?: number;
+    endOffset?: number;
+    routing?: RoutingType;
+    curveRadius?: number;
+    stroke?: string;
+    strokeWidth?: number;
+    strokeOpacity?: number;
+    strokeDasharray?: string;
+    strokeLinecap?: 'butt' | 'round' | 'square';
+    strokeLinejoin?: 'arcs' | 'bevel' | 'miter' | 'miter-clip' | 'round';
+    headShape?: HeadShape;
+    headSize?: number;
+    headFill?: boolean;
+    class?: string;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -47,7 +108,9 @@ const DEFAULTS = {
 /**
  * Calculate the x,y coordinates of an anchor point on a bar.
  */
-function getAnchorPoint(bar, anchor, offset = 0.5) {
+//function getAnchorPoint(bar, anchor, offset = 0.5) {
+function getAnchorPoint(bar: BarPosition, anchor: AnchorType, offset = 0.5): Point {
+
     const t = Math.max(0, Math.min(1, offset));
 
     switch (anchor) {
@@ -70,7 +133,9 @@ function getAnchorPoint(bar, anchor, offset = 0.5) {
  * Check if tasks overlap horizontally (parallel tasks).
  * Overlap exists when successor starts before predecessor ends.
  */
-function hasHorizontalOverlap(from, to) {
+//function hasHorizontalOverlap(from, to) {
+function hasHorizontalOverlap(from: BarPosition, to: BarPosition) {
+
     const fromRightEdge = from.x + from.width;
     return to.x < fromRightEdge;
 }
@@ -82,7 +147,8 @@ function hasHorizontalOverlap(from, to) {
  * - Different rows: Exit from BOTTOM (going down) or TOP (going up)
  * - Same row: Exit from side (RIGHT for FS/FF, LEFT for SS/SF)
  */
-function autoSelectStartAnchor(from, to, dependencyType = 'FS') {
+//function autoSelectStartAnchor(from, to, dependencyType = 'FS') {
+function autoSelectStartAnchor(from: BarPosition, to: BarPosition, dependencyType: DependencyType = 'FS') {
     const fromCenterY = from.y + from.height / 2;
     const toCenterY = to.y + to.height / 2;
     const dy = toCenterY - fromCenterY;
@@ -114,7 +180,8 @@ function autoSelectStartAnchor(from, to, dependencyType = 'FS') {
  * - -Start dependencies (FS, SS): enter from LEFT (the start of the task)
  * - -Finish dependencies (FF, SF): enter from RIGHT for same row, TOP for different rows
  */
-function autoSelectEndAnchor(from, to, dependencyType = 'FS') {
+//function autoSelectEndAnchor(from, to, dependencyType = 'FS') {
+function autoSelectEndAnchor(from: BarPosition, to: BarPosition, dependencyType: DependencyType = 'FS') {
     const fromCenterY = from.y + from.height / 2;
     const toCenterY = to.y + to.height / 2;
     const dy = toCenterY - fromCenterY;
@@ -136,11 +203,11 @@ function autoSelectEndAnchor(from, to, dependencyType = 'FS') {
  * - SS/SF: Exit near the START (left) of the predecessor
  */
 function calculateSmartOffset(
-    from,
-    to,
-    anchor,
-    curveRadius,
-    dependencyType = 'FS',
+    from: BarPosition,
+    to: BarPosition,
+    anchor: AnchorType,
+    curveRadius: number,
+    dependencyType: DependencyType = 'FS',
 ) {
     if (anchor === 'right') {
         return 0.5; // Center of right edge
@@ -176,7 +243,9 @@ function calculateSmartOffset(
 /**
  * Generate arrow head pointing RIGHT (for horizontal entry from left)
  */
-function generateArrowHeadRight(shape, size, fill) {
+//function generateArrowHeadRight(shape, size, fill) {
+function generateArrowHeadRight(shape: HeadShape, size: number, fill: boolean): string {
+
     if (size <= 0 || shape === 'none') {
         return '';
     }
@@ -220,7 +289,9 @@ function generateArrowHeadRight(shape, size, fill) {
  * Generate a straight line path between two points.
  * Returns just the line path (no arrow head).
  */
-function straightPath(start, end) {
+//function straightPath(start, end) {
+function straightPath(start: Point, end: Point): string {
+
     return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
 }
 
@@ -228,7 +299,9 @@ function straightPath(start, end) {
  * Generate an orthogonal path with rounded corners.
  * Returns just the line path (no arrow head).
  */
-function orthogonalPath(start, end, startAnchor, endAnchor, curveRadius) {
+//function orthogonalPath(start, end, startAnchor, endAnchor, curveRadius) {
+function orthogonalPath(start: Point, end: Point, startAnchor: AnchorType, endAnchor: AnchorType, curveRadius: number): string {
+
     const dx = end.x - start.x;
     const dy = end.y - start.y;
 
@@ -279,7 +352,9 @@ function orthogonalPath(start, end, startAnchor, endAnchor, curveRadius) {
  * Goes: down, horizontal, down to target.
  * Returns just the line path (no arrow head).
  */
-function verticalToVerticalPath(start, end, curve) {
+//function verticalToVerticalPath(start, end, curve) {
+function verticalToVerticalPath(start: Point, end: Point, curve: number): string {
+
     const dx = end.x - start.x;
     const dy = end.y - start.y;
 
@@ -331,7 +406,9 @@ function verticalToVerticalPath(start, end, curve) {
  * Goes: down, then horizontal to the target edge.
  * Returns just the line path (no arrow head).
  */
-function verticalToHorizontalPath(start, end, startAnchor, endAnchor, curve) {
+//function verticalToHorizontalPath(start, end, startAnchor, endAnchor, curve) {
+function verticalToHorizontalPath(start: Point, end: Point, startAnchor: AnchorType, endAnchor: AnchorType, curve: number): string {
+
     const dy = end.y - start.y;
     const goingDown = startAnchor === 'bottom';
     const enteringLeft = endAnchor === 'left';
@@ -399,7 +476,9 @@ function verticalToHorizontalPath(start, end, startAnchor, endAnchor, curve) {
  * Simple L-shape - always goes forward (right) since exit point is clamped.
  * Returns just the line path (no arrow head).
  */
-function verticalFirstPath(start, end, curve) {
+//function verticalFirstPath(start, end, curve) {
+function verticalFirstPath(start: Point, end: Point, curve: number): string {
+
     const dy = end.y - start.y;
     const goingUp = dy < 0;
 
@@ -436,7 +515,9 @@ function verticalFirstPath(start, end, curve) {
  * S-curve shape for vertical offset.
  * Returns just the line path (no arrow head).
  */
-function horizontalFirstPath(start, end, curve) {
+//function horizontalFirstPath(start, end, curve) {
+function horizontalFirstPath(start: Point, end: Point, curve: number): string {
+
     const dx = end.x - start.x;
     const dy = end.y - start.y;
     const goingUp = dy < 0;
@@ -484,11 +565,18 @@ function horizontalFirstPath(start, end, curve) {
  * Direction determines which way the arrow points.
  */
 function generateArrowHeadPath(
+/*
     endPoint,
     shape,
     size,
     fill,
     direction = 'right',
+*/
+    endPoint: Point,
+    shape: HeadShape,
+    size: number,
+    fill: boolean,
+    direction: 'right' | 'left' | 'up' | 'down' = 'right',
 ) {
     if (size <= 0 || shape === 'none') {
         return '';
@@ -572,7 +660,9 @@ function generateArrowHeadPath(
 /**
  * Determine arrow head direction based on end anchor.
  */
-function getArrowHeadDirection(endAnchor) {
+//function getArrowHeadDirection(endAnchor) {
+function getArrowHeadDirection(endAnchor: AnchorType): 'right' | 'left' | 'up' | 'down' {
+
     switch (endAnchor) {
         case 'top':
             return 'down'; // Arrow points down into top of bar
@@ -587,8 +677,10 @@ function getArrowHeadDirection(endAnchor) {
     }
 }
 
-function generatePath(from, to, config) {
-    const endProf = prof.start('Arrow.generatePath');
+//function generatePath(from, to, config) {
+function generatePath(from: BarPosition, to: BarPosition, config: ArrowConfig): PathResult {
+
+    //const endProf = prof.start('Arrow.generatePath');
 
     const {
         startAnchor,
@@ -658,7 +750,7 @@ function generatePath(from, to, config) {
         headDirection,
     );
 
-    endProf();
+    //endProf();
     return { linePath, headPath, endPoint: end };
 }
 
@@ -673,10 +765,14 @@ function generatePath(from, to, config) {
  * Assumes successor is always to the right of predecessor.
  * Renders line and arrow head as separate paths for proper fill support.
  */
-export function Arrow(props) {
+//export function Arrow(props) {
+export function Arrow(props: ArrowProps): JSX.Element {
+
     // Get bar position - prefer positionMap (batch cached) over getBarPosition (per-call)
     // positionMap eliminates 184K getBarPosition calls during V-scroll
-    const getAdjustedPosition = (taskId) => {
+    //const getAdjustedPosition = (taskId) => {
+    const getAdjustedPosition = (taskId: string): BarPosition | null => {
+
         // Use positionMap if available (from ArrowLayer batch optimization)
         if (props.positionMap) {
             const pos = props.positionMap.get(taskId);
