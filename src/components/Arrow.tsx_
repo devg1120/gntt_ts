@@ -1,8 +1,17 @@
 // Note: createMemo was attempted for optimization but created reactive cascades
 // that hurt scroll performance. Plain functions work better here.
 
+//import { prof } from '../perf/profiler.js';
+
+/**
+ * Arrow Component - Decorative/Informative Only
+ *
+ * A pure visual renderer for dependency arrows between task bars.
+ * Successor must be to the RIGHT of predecessor (no backward arrows).
+ */
+
 import { JSX } from 'solid-js';
-//import { prof } from '../utils/profiler';
+
 import type { TaskStore } from '../stores/taskStore';
 import type { BarPosition, DependencyType } from '../types';
 
@@ -11,9 +20,13 @@ interface Point {
     y: number;
 }
 
-type AnchorType = 'auto' | 'top' | 'bottom' | 'left' | 'right' | 'center';
-type RoutingType = 'straight' | 'orthogonal';
-type HeadShape = 'chevron' | 'triangle' | 'diamond' | 'circle' | 'none';
+//type AnchorType = 'auto' | 'top' | 'bottom' | 'left' | 'right' | 'center';
+type AnchorType = string;
+//type RoutingType = 'straight' | 'orthogonal';
+type RoutingType = string;
+//type HeadShape = 'chevron' | 'triangle' | 'diamond' | 'circle' | 'none';
+type HeadShape = string;
+
 
 interface ArrowConfig {
     startAnchor: AnchorType;
@@ -53,8 +66,13 @@ interface ArrowProps {
     strokeWidth?: number;
     strokeOpacity?: number;
     strokeDasharray?: string;
+
     strokeLinecap?: 'butt' | 'round' | 'square';
+    //strokeLinecap?: "round" | "inherit" | "butt" | "square" | undefined;
+
     strokeLinejoin?: 'arcs' | 'bevel' | 'miter' | 'miter-clip' | 'round';
+    //strokeLinejoin?: string;
+
     headShape?: HeadShape;
     headSize?: number;
     headFill?: boolean;
@@ -67,24 +85,24 @@ interface ArrowProps {
 
 const DEFAULTS = {
     // Anchoring
-    START_ANCHOR: 'auto' as AnchorType,
-    END_ANCHOR: 'auto' as AnchorType,
+    START_ANCHOR: 'auto',
+    END_ANCHOR: 'auto',
     ANCHOR_OFFSET: 0.5,
 
     // Path shape
-    ROUTING: 'orthogonal' as RoutingType,
+    ROUTING: 'orthogonal',
     CURVE_RADIUS: 5,
 
     // Line style
     STROKE: '#666',
     STROKE_WIDTH: 1.4,
     STROKE_OPACITY: 1,
-    STROKE_LINECAP: 'round' as const,
-    STROKE_LINEJOIN: 'round' as const,
+    STROKE_LINECAP: 'round',
+    STROKE_LINEJOIN: 'round',
 
     // Arrow head
     HEAD_SIZE: 5,
-    HEAD_SHAPE: 'chevron' as HeadShape,
+    HEAD_SHAPE: 'chevron',
     HEAD_FILL: false,
 
     // Thresholds
@@ -98,7 +116,9 @@ const DEFAULTS = {
 /**
  * Calculate the x,y coordinates of an anchor point on a bar.
  */
+//function getAnchorPoint(bar, anchor, offset = 0.5) {
 function getAnchorPoint(bar: BarPosition, anchor: AnchorType, offset = 0.5): Point {
+
     const t = Math.max(0, Math.min(1, offset));
 
     switch (anchor) {
@@ -118,13 +138,25 @@ function getAnchorPoint(bar: BarPosition, anchor: AnchorType, offset = 0.5): Poi
 }
 
 /**
+ * Check if tasks overlap horizontally (parallel tasks).
+ * Overlap exists when successor starts before predecessor ends.
+ */
+//function hasHorizontalOverlap(from, to) {
+function hasHorizontalOverlap(from: BarPosition, to: BarPosition) {
+
+    const fromRightEdge = from.x + from.width;
+    return to.x < fromRightEdge;
+}
+
+/**
  * Automatically select the best start anchor based on geometry and dependency type.
  *
  * Gantt chart convention:
  * - Different rows: Exit from BOTTOM (going down) or TOP (going up)
  * - Same row: Exit from side (RIGHT for FS/FF, LEFT for SS/SF)
  */
-function autoSelectStartAnchor(from: BarPosition, to: BarPosition, dependencyType: DependencyType = 'FS'): AnchorType {
+//function autoSelectStartAnchor(from, to, dependencyType = 'FS') {
+function autoSelectStartAnchor(from: BarPosition, to: BarPosition, dependencyType: DependencyType = 'FS') {
     const fromCenterY = from.y + from.height / 2;
     const toCenterY = to.y + to.height / 2;
     const dy = toCenterY - fromCenterY;
@@ -156,7 +188,8 @@ function autoSelectStartAnchor(from: BarPosition, to: BarPosition, dependencyTyp
  * - -Start dependencies (FS, SS): enter from LEFT (the start of the task)
  * - -Finish dependencies (FF, SF): enter from RIGHT for same row, TOP for different rows
  */
-function autoSelectEndAnchor(from: BarPosition, to: BarPosition, dependencyType: DependencyType = 'FS'): AnchorType {
+//function autoSelectEndAnchor(from, to, dependencyType = 'FS') {
+function autoSelectEndAnchor(from: BarPosition, to: BarPosition, dependencyType: DependencyType = 'FS') {
     const fromCenterY = from.y + from.height / 2;
     const toCenterY = to.y + to.height / 2;
     const dy = toCenterY - fromCenterY;
@@ -183,7 +216,7 @@ function calculateSmartOffset(
     anchor: AnchorType,
     curveRadius: number,
     dependencyType: DependencyType = 'FS',
-): number {
+) {
     if (anchor === 'right') {
         return 0.5; // Center of right edge
     }
@@ -218,7 +251,9 @@ function calculateSmartOffset(
 /**
  * Generate arrow head pointing RIGHT (for horizontal entry from left)
  */
+//function generateArrowHeadRight(shape, size, fill) {
 function generateArrowHeadRight(shape: HeadShape, size: number, fill: boolean): string {
+
     if (size <= 0 || shape === 'none') {
         return '';
     }
@@ -237,7 +272,7 @@ function generateArrowHeadRight(shape: HeadShape, size: number, fill: boolean): 
             // Diamond shape - tip at current position, extends back
             // Draw all 4 sides explicitly to avoid z closing to wrong point
             return `m ${-size * 2} 0 l ${size} ${-size} l ${size} ${size} l ${-size} ${size} l ${-size} ${-size}`;
-        case 'circle': {
+        case 'circle':
             // Circle at the end point - draw as a complete circle without z
             const r = size * 0.7;
             const k = 0.5523;
@@ -249,7 +284,6 @@ function generateArrowHeadRight(shape: HeadShape, size: number, fill: boolean): 
                 `c 0 ${r * k} ${-r * (1 - k)} ${r} ${-r} ${r} ` +
                 `c ${-r * k} 0 ${-r} ${-r * (1 - k)} ${-r} ${-r}`
             );
-        }
         default:
             return `m ${-size} ${-size} l ${size} ${size} l ${-size} ${size}`;
     }
@@ -263,7 +297,9 @@ function generateArrowHeadRight(shape: HeadShape, size: number, fill: boolean): 
  * Generate a straight line path between two points.
  * Returns just the line path (no arrow head).
  */
+//function straightPath(start, end) {
 function straightPath(start: Point, end: Point): string {
+
     return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
 }
 
@@ -271,7 +307,9 @@ function straightPath(start: Point, end: Point): string {
  * Generate an orthogonal path with rounded corners.
  * Returns just the line path (no arrow head).
  */
+//function orthogonalPath(start, end, startAnchor, endAnchor, curveRadius) {
 function orthogonalPath(start: Point, end: Point, startAnchor: AnchorType, endAnchor: AnchorType, curveRadius: number): string {
+
     const dx = end.x - start.x;
     const dy = end.y - start.y;
 
@@ -322,7 +360,9 @@ function orthogonalPath(start: Point, end: Point, startAnchor: AnchorType, endAn
  * Goes: down, horizontal, down to target.
  * Returns just the line path (no arrow head).
  */
+//function verticalToVerticalPath(start, end, curve) {
 function verticalToVerticalPath(start: Point, end: Point, curve: number): string {
+
     const dx = end.x - start.x;
     const dy = end.y - start.y;
 
@@ -374,7 +414,9 @@ function verticalToVerticalPath(start: Point, end: Point, curve: number): string
  * Goes: down, then horizontal to the target edge.
  * Returns just the line path (no arrow head).
  */
+//function verticalToHorizontalPath(start, end, startAnchor, endAnchor, curve) {
 function verticalToHorizontalPath(start: Point, end: Point, startAnchor: AnchorType, endAnchor: AnchorType, curve: number): string {
+
     const dy = end.y - start.y;
     const goingDown = startAnchor === 'bottom';
     const enteringLeft = endAnchor === 'left';
@@ -442,7 +484,9 @@ function verticalToHorizontalPath(start: Point, end: Point, startAnchor: AnchorT
  * Simple L-shape - always goes forward (right) since exit point is clamped.
  * Returns just the line path (no arrow head).
  */
+//function verticalFirstPath(start, end, curve) {
 function verticalFirstPath(start: Point, end: Point, curve: number): string {
+
     const dy = end.y - start.y;
     const goingUp = dy < 0;
 
@@ -479,7 +523,9 @@ function verticalFirstPath(start: Point, end: Point, curve: number): string {
  * S-curve shape for vertical offset.
  * Returns just the line path (no arrow head).
  */
+//function horizontalFirstPath(start, end, curve) {
 function horizontalFirstPath(start: Point, end: Point, curve: number): string {
+
     const dx = end.x - start.x;
     const dy = end.y - start.y;
     const goingUp = dy < 0;
@@ -527,12 +573,19 @@ function horizontalFirstPath(start: Point, end: Point, curve: number): string {
  * Direction determines which way the arrow points.
  */
 function generateArrowHeadPath(
+/*
+    endPoint,
+    shape,
+    size,
+    fill,
+    direction = 'right',
+*/
     endPoint: Point,
     shape: HeadShape,
     size: number,
     fill: boolean,
     direction: 'right' | 'left' | 'up' | 'down' = 'right',
-): string {
+) {
     if (size <= 0 || shape === 'none') {
         return '';
     }
@@ -615,7 +668,9 @@ function generateArrowHeadPath(
 /**
  * Determine arrow head direction based on end anchor.
  */
+//function getArrowHeadDirection(endAnchor) {
 function getArrowHeadDirection(endAnchor: AnchorType): 'right' | 'left' | 'up' | 'down' {
+
     switch (endAnchor) {
         case 'top':
             return 'down'; // Arrow points down into top of bar
@@ -630,7 +685,9 @@ function getArrowHeadDirection(endAnchor: AnchorType): 'right' | 'left' | 'up' |
     }
 }
 
+//function generatePath(from, to, config) {
 function generatePath(from: BarPosition, to: BarPosition, config: ArrowConfig): PathResult {
+
     //const endProf = prof.start('Arrow.generatePath');
 
     const {
@@ -678,7 +735,7 @@ function generatePath(from: BarPosition, to: BarPosition, config: ArrowConfig): 
     const end = getAnchorPoint(to, resolvedEndAnchor, endOffset);
 
     // Route the line path (no arrow head)
-    let linePath: string;
+    let linePath;
     if (routing === 'straight') {
         linePath = straightPath(start, end);
     } else {
@@ -716,10 +773,14 @@ function generatePath(from: BarPosition, to: BarPosition, config: ArrowConfig): 
  * Assumes successor is always to the right of predecessor.
  * Renders line and arrow head as separate paths for proper fill support.
  */
+//export function Arrow(props) {
 export function Arrow(props: ArrowProps): JSX.Element {
+
     // Get bar position - prefer positionMap (batch cached) over getBarPosition (per-call)
     // positionMap eliminates 184K getBarPosition calls during V-scroll
+    //const getAdjustedPosition = (taskId) => {
     const getAdjustedPosition = (taskId: string): BarPosition | null => {
+
         // Use positionMap if available (from ArrowLayer batch optimization)
         if (props.positionMap) {
             const pos = props.positionMap.get(taskId);
@@ -731,7 +792,7 @@ export function Arrow(props: ArrowProps): JSX.Element {
 
     // Position accessors - plain functions, NOT memos
     // Memoizing these creates subscriptions to rowLayouts that cascade during scroll
-    const fromPosition = (): BarPosition | null => {
+    const fromPosition = () => {
         if (props.from) return props.from;
         if (props.taskStore && props.fromId) {
             return getAdjustedPosition(props.fromId);
@@ -739,7 +800,7 @@ export function Arrow(props: ArrowProps): JSX.Element {
         return null;
     };
 
-    const toPosition = (): BarPosition | null => {
+    const toPosition = () => {
         if (props.to) return props.to;
         if (props.taskStore && props.toId) {
             return getAdjustedPosition(props.toId);
@@ -748,15 +809,16 @@ export function Arrow(props: ArrowProps): JSX.Element {
     };
 
     // No subtasks - always return false for expanded check
-    const fromTaskIsExpanded = (): boolean => false;
+    const fromTaskIsExpanded = () => false;
 
     // Config accessor - plain function to avoid subscription cascades
-    const config = (): ArrowConfig => {
+    //const config = () =>  {
+    const config = () :ArrowConfig => {
         const isExpanded = fromTaskIsExpanded();
 
         // For expanded containers, force 'right' anchor (override 'auto')
         // This ensures arrows exit from container's right edge, not bottom
-        let startAnchor: AnchorType = props.startAnchor ?? DEFAULTS.START_ANCHOR;
+        let startAnchor = props.startAnchor ?? DEFAULTS.START_ANCHOR;
         if (isExpanded && startAnchor === 'auto') {
             startAnchor = 'right';
         }
@@ -777,21 +839,21 @@ export function Arrow(props: ArrowProps): JSX.Element {
 
     // Path generation - plain function (not memo)
     // Memoization creates reactive subscriptions that cascade during scroll
-    const paths = (): { linePath: string; headPath: string } => {
-        const from = fromPosition();
-        const to = toPosition();
+    const paths = () => {
+        const from: any = fromPosition();
+        const to: any = toPosition();
 
         if (!from || !to) return { linePath: '', headPath: '' };
 
         return generatePath(from, to, config());
     };
 
-    const stroke = (): string => props.stroke ?? DEFAULTS.STROKE;
-    const headShape = (): HeadShape => props.headShape ?? DEFAULTS.HEAD_SHAPE;
-    const headFill = (): boolean => props.headFill ?? DEFAULTS.HEAD_FILL;
+    const stroke = () => props.stroke ?? DEFAULTS.STROKE;
+    const headShape = () => props.headShape ?? DEFAULTS.HEAD_SHAPE;
+    const headFill = () => props.headFill ?? DEFAULTS.HEAD_FILL;
 
     // Chevron is always stroke-only, never filled
-    const shouldFillHead = (): boolean => headFill() && headShape() !== 'chevron';
+    const shouldFillHead = () => headFill() && headShape() !== 'chevron';
 
     return (
         <g
@@ -841,5 +903,3 @@ export {
     generateArrowHeadRight,
     DEFAULTS as ARROW_DEFAULTS,
 };
-
-export type { ArrowProps, ArrowConfig, AnchorType, RoutingType, HeadShape, Point };
