@@ -19,7 +19,7 @@ echo $1 "copy"
 if [ -f  ../../../gntt_org2/src/components/$1 ] ; then
 
    echo exist  ../../../gntt_org2/src/components/$1
-   #cp ../../../gntt_org2/src/components/$1
+   cp ../../../gntt_org2/src/components/$1 .
 else
    echo not exist  ../../../gntt_org2/src/components/$1
     

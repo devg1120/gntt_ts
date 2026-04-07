@@ -1,33 +1,32 @@
-import { createContext, useContext } from 'solid-js';
+import { createContext, useContext, JSX } from 'solid-js';
+import type { BarPosition } from '../types';
 
-/**
- * GanttEventsContext provides event handlers to deeply nested components
- * without prop drilling through intermediate layers.
- *
- * Events provided:
- * - onDateChange(taskId, position) - Task dates changed via drag
- * - onProgressChange(taskId, progress) - Progress percentage changed
- * - onResizeEnd(taskId) - Task resize completed
- * - onTaskClick(taskId, event) - Task bar clicked
- * - onHover(taskId, clientX, clientY) - Mouse entered task bar
- * - onHoverEnd() - Mouse left task bar
- */
-const GanttEventsContext = createContext();
+interface GanttEventHandlers {
+    onDateChange: (taskId: string, position: Partial<BarPosition>) => void;
+    onProgressChange: (taskId: string, progress: number) => void;
+    onResizeEnd: (taskId: string) => void;
+    onTaskClick: (taskId: string, event: MouseEvent) => void;
+    onHover: (taskId: string, clientX: number, clientY: number) => void;
+    onHoverEnd: () => void;
+}
+
+interface GanttEventsProviderProps {
+    onDateChange?: (taskId: string, position: Partial<BarPosition>) => void;
+    onProgressChange?: (taskId: string, progress: number) => void;
+    onResizeEnd?: (taskId: string) => void;
+    onTaskClick?: (taskId: string, event: MouseEvent) => void;
+    onHover?: (taskId: string, clientX: number, clientY: number) => void;
+    onHoverEnd?: () => void;
+    children: JSX.Element;
+}
+
+const GanttEventsContext = createContext<GanttEventHandlers>();
 
 /**
  * Provider component that wraps the Gantt chart and provides event handlers.
- *
- * @param {Object} props
- * @param {Function} props.onDateChange - Handler for date changes
- * @param {Function} props.onProgressChange - Handler for progress changes
- * @param {Function} props.onResizeEnd - Handler for resize completion
- * @param {Function} props.onTaskClick - Handler for task clicks
- * @param {Function} props.onHover - Handler for hover start
- * @param {Function} props.onHoverEnd - Handler for hover end
- * @param {JSX.Element} props.children - Child components
  */
-export function GanttEventsProvider(props) {
-    const handlers = {
+export function GanttEventsProvider(props: GanttEventsProviderProps): JSX.Element {
+    const handlers: GanttEventHandlers = {
         onDateChange: (taskId, position) => props.onDateChange?.(taskId, position),
         onProgressChange: (taskId, progress) => props.onProgressChange?.(taskId, progress),
         onResizeEnd: (taskId) => props.onResizeEnd?.(taskId),
@@ -45,13 +44,8 @@ export function GanttEventsProvider(props) {
 
 /**
  * Hook to access Gantt event handlers from any nested component.
- *
- * @returns {Object} Event handlers object
- * @example
- * const { onDateChange, onTaskClick } = useGanttEvents();
- * onDateChange(taskId, { x: 100, width: 200 });
  */
-export function useGanttEvents() {
+export function useGanttEvents(): GanttEventHandlers {
     const context = useContext(GanttEventsContext);
     if (!context) {
         // Return no-op handlers if used outside provider

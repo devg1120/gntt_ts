@@ -196,7 +196,7 @@ export function snapToGrid(
     return snapped;
 }
 
-interface LabelPosition {
+export interface LabelPosition {
     x: number;
     position: 'inside' | 'outside';
 }

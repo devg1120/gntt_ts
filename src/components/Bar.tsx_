@@ -1,76 +1,12 @@
-import { JSX, createSignal, Show, onCleanup } from 'solid-js';
+import { createSignal, Show, onCleanup } from 'solid-js';
 import {
     computeProgressWidth,
     computeExpectedProgress,
     computeLabelPosition,
     snapToGrid,
 } from '../utils/barCalculations.js';
-
-import type { LabelPosition } from '../utils/barCalculations.js';
-
 import { useDrag, clamp } from '../hooks/useDrag.js';
 import { useGanttEvents } from '../contexts/GanttEvents.jsx';
-
-
-import type { TaskStore } from '../stores/taskStore';
-import type { GanttConfigStore } from '../stores/ganttConfigStore';
-import type { ProcessedTask, BarPosition, LockState } from '../types';
-
-interface TaskPosition {
-    y: number;
-    height?: number;
-}
-
-interface BatchOriginal {
-    originalX: number;
-}
-
-interface ConstrainedResult {
-    x?: number;
-}
-
-interface BarProps {
-    task: ProcessedTask | Accessor<ProcessedTask>;
-    taskStore?: TaskStore;
-    ganttConfig?: GanttConfigStore;
-    taskPosition?: TaskPosition | Accessor<TaskPosition | undefined>;
-    visible?: boolean;
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-    cornerRadius?: number;
-    readonly?: boolean;
-    readonlyDates?: boolean;
-    readonlyProgress?: boolean;
-    showExpectedProgress?: boolean;
-    columnWidth?: number;
-    ignoredPositions?: number[];
-    onCollectDependents?: (taskId: string) => Set<string>;
-    onCollectDescendants?: (taskId: string) => Set<string>;
-    onClampBatchDelta?: (batchOriginals: Map<string, BatchOriginal>, deltaX: number) => number;
-    onConstrainPosition?: (taskId: string, x: number, y: number) => ConstrainedResult | null;
-    onDateChange?: (taskId: string, position: { x: number; width: number }) => void;
-    onResizeEnd?: (taskId: string) => void;
-    onProgressChange?: (taskId: string, progress: number) => void;
-    onHover?: (taskId: string, clientX: number, clientY: number) => void;
-    onHoverEnd?: () => void;
-    onTaskClick?: (taskId: string, e: MouseEvent) => void;
-}
-
-interface TaskData {
-    id: string;
-    name: string;
-    color: string;
-    colorProgress: string;
-    progress: number;
-    locked: LockState;
-    invalid: boolean;
-    customClass: string;
-    hasChildren: boolean;
-    start: Date | string | null;
-    end: Date | string | null;
-}
 
 /**
  * SolidJS Bar Component
@@ -85,15 +21,13 @@ interface TaskData {
  *
  * Integrates with taskStore for reactive position updates.
  */
-//export function Bar(props) {
-export function Bar(props: BarProps): JSX.Element {
-
+export function Bar(props) {
     // Get event handlers from context (fallback to props for backwards compatibility)
     const events = useGanttEvents();
 
     // Get task ID - prefer explicit taskId prop, fallback to task.id
     // taskId prop can be a value OR an accessor function (for <Index> pooling)
-    const taskId = ():string => {
+    const taskId = () => {
         const id = props.taskId;
         return typeof id === 'function' ? id() : id ?? props.task?.id;
     };
@@ -101,7 +35,7 @@ export function Bar(props: BarProps): JSX.Element {
     // Get position directly from taskStore - plain function for virtualized components
     // Avoids memo subscription churn during scroll (similar to Arrow.jsx approach)
     // Store access creates fine-grained dependency in calling context
-    const getPosition = (): BarPosition => {
+    const getPosition = () => {
         if (props.taskStore && taskId()) {
             const task = props.taskStore.tasks[taskId()];
             if (task?.$bar) {
@@ -135,18 +69,18 @@ export function Bar(props: BarProps): JSX.Element {
     };
 
     // Derived position values - call getPosition() for fine-grained store tracking
-    const x = (): number => getPosition()?.x ?? 0;
+    const x = () => getPosition()?.x ?? 0;
     // Use taskPosition Y if provided (for variable row heights), else fall back to $bar.y
     // taskPosition can be a value OR accessor (for <Index> pooling reactivity)
-    const y = (): number => {
+    const y = () => {
         const pos = typeof props.taskPosition === 'function' ? props.taskPosition() : props.taskPosition;
         return pos?.y ?? getPosition()?.y ?? 0;
     };
-    const width = (): number => getPosition()?.width ?? 100;
-    const height = (): number => getPosition()?.height ?? 30;
+    const width = () => getPosition()?.width ?? 100;
+    const height = () => getPosition()?.height ?? 30;
 
     // Minimum bar width (one column)
-    const minWidth = ():number => columnWidth();
+    const minWidth = () => columnWidth();
 
     // Track if a drag occurred (to distinguish click from drag)
     const [didDrag, setDidDrag] = createSignal(false);
@@ -388,7 +322,7 @@ export function Bar(props: BarProps): JSX.Element {
     // EVENT HANDLERS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    const handleBarMouseDown = (e: MouseEvent): void => {
+    const handleBarMouseDown = (e) => {
         if (readonly() || readonlyDates() || isLocked()) {
             return;
         }
@@ -404,14 +338,14 @@ export function Bar(props: BarProps): JSX.Element {
     };
 
     // Hover handlers for task data popup (use context with props fallback)
-    const handleMouseEnter = (e: MouseEvent): void => {
+    const handleMouseEnter = (e) => {
         const onHover = props.onHover ?? events.onHover;
         if (onHover && !isDragging()) {
             onHover(task().id, e.clientX, e.clientY);
         }
     };
 
-    const handleMouseLeave = ():void => {
+    const handleMouseLeave = () => {
         const onHoverEnd = props.onHoverEnd ?? events.onHoverEnd;
         if (onHoverEnd) {
             onHoverEnd();
@@ -419,7 +353,7 @@ export function Bar(props: BarProps): JSX.Element {
     };
 
     // Click handler for task data modal (only fires if no drag occurred)
-    const handleClick = (e: MouseEvent):void => {
+    const handleClick = (e) => {
         const onTaskClick = props.onTaskClick ?? events.onTaskClick;
         if (!didDrag() && onTaskClick) {
             e.stopPropagation();
@@ -427,19 +361,19 @@ export function Bar(props: BarProps): JSX.Element {
         }
     };
 
-    const handleLeftHandleMouseDown = (e: MouseEvent):void => {
+    const handleLeftHandleMouseDown = (e) => {
         if (readonly() || readonlyDates() || isLocked()) return;
         e.stopPropagation();
         startDrag(e, 'dragging_left', { taskId: task().id });
     };
 
-    const handleRightHandleMouseDown = (e:MouseEvent):void => {
+    const handleRightHandleMouseDown = (e) => {
         if (readonly() || readonlyDates() || isLocked()) return;
         e.stopPropagation();
         startDrag(e, 'dragging_right', { taskId: task().id });
     };
 
-    const handleProgressMouseDown = (e: MouseEvent):void => {
+    const handleProgressMouseDown = (e) => {
         if (readonly() || readonlyProgress() || isLocked())
             return;
         e.stopPropagation();
@@ -451,7 +385,7 @@ export function Bar(props: BarProps): JSX.Element {
     // ═══════════════════════════════════════════════════════════════════════════
 
     // Progress width calculation
-    const progressWidth = ():number => {
+    const progressWidth = () => {
         const progress = task().progress ?? 0;
         return computeProgressWidth(
             x(),
@@ -463,7 +397,7 @@ export function Bar(props: BarProps): JSX.Element {
     };
 
     // Expected progress width (if enabled)
-    const expectedProgressWidth = ():number => {
+    const expectedProgressWidth = () => {
         if (!showExpectedProgress()) return 0;
 
         const taskStart = task()._start ?? task().start;
@@ -487,45 +421,45 @@ export function Bar(props: BarProps): JSX.Element {
     };
 
     // Label positioning
-    const labelInfo = (): LabelPosition => {
+    const labelInfo = () => {
         const name = task().name ?? '';
         return computeLabelPosition(x(), width(), name);
     };
 
     // Colors
-    const barColor = (): string => task().color ?? 'var(--g-bar-color, #b8c2cc)';
-    const progressColor = (): string =>
+    const barColor = () => task().color ?? 'var(--g-bar-color, #b8c2cc)';
+    const progressColor = () =>
         task().color_progress ?? 'var(--g-bar-progress-color, #a3a3ff)';
-    const expectedProgressColor = (): string =>
+    const expectedProgressColor = () =>
         'var(--g-expected-progress-color, rgba(0,0,0,0.2))';
 
     // Check if task has subtasks (for fill opacity)
-    const hasSubtasks = (): boolean => task()._children?.length > 0;
+    const hasSubtasks = () => task()._children?.length > 0;
 
     // Invalid state
-    const isInvalid = (): boolean => task().invalid ?? false;
+    const isInvalid = () => task().invalid ?? false;
 
     // Custom class
-    const customClass = (): string => task().custom_class ?? '';
+    const customClass = () => task().custom_class ?? '';
 
     // Handle visibility (show when not fully readonly)
-    const showHandles = (): boolean => !readonly();
-    const showDateHandles = (): boolean => showHandles() && !readonlyDates();
-    const showProgressHandle = (): boolean =>
+    const showHandles = () => !readonly();
+    const showDateHandles = () => showHandles() && !readonlyDates();
+    const showProgressHandle = () =>
         showHandles() && !readonlyProgress();
 
     // Locked state (from constraint system)
-    const isLocked = (): boolean => task().constraints?.locked ?? false;
+    const isLocked = () => task().constraints?.locked ?? false;
 
     // Drag state class
-    const dragClass = (): string => (isDragging() ? `dragging ${dragState()}` : '');
+    const dragClass = () => (isDragging() ? `dragging ${dragState()}` : '');
 
     // ═══════════════════════════════════════════════════════════════════════════
     // RENDER
     // ═══════════════════════════════════════════════════════════════════════════
 
     // Visibility prop for virtualization - hidden bars stay in DOM but are not painted
-    const visible = (): bollean => props.visible ?? true;
+    const visible = () => props.visible ?? true;
 
     return (
         <g
