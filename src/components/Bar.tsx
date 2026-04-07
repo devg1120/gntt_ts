@@ -226,10 +226,12 @@ export function Bar(props: BarProps): JSX.Element {
                     data.dependentOriginals?.size > 0 &&
                     props.taskStore.batchMovePositions
                 ) {
+                    const dependentOriginals = data['dependentOriginals'] as Map<string, BatchOriginal>;
                     // Clamp deltaX to prevent constraint violations when dragging backward
                     if (props.onClampBatchDelta && deltaX < 0) {
                         deltaX = props.onClampBatchDelta(
-                            data.dependentOriginals,
+                            //data.dependentOriginals,
+                            dependentOriginals,
                             deltaX,
                         );
                     }
@@ -237,7 +239,8 @@ export function Bar(props: BarProps): JSX.Element {
                     // Batch move all dependent tasks by the same delta
                     // This is much faster than individual constraint resolution
                     props.taskStore.batchMovePositions(
-                        data.dependentOriginals,
+                        //data.dependentOriginals,
+                        dependentOriginals,
                         deltaX,
                     );
                 } else {
@@ -258,13 +261,22 @@ export function Bar(props: BarProps): JSX.Element {
                 const rawDelta = move.deltaX;
                 const snappedDelta = Math.round(rawDelta / colWidth) * colWidth;
 
-                let newX = data.originalX + snappedDelta;
-                let newWidth = data.originalWidth - snappedDelta;
+                //let newX = data.originalX + snappedDelta;
+                const originalX = data['originalX'] as number;
+                let newX = originalX + snappedDelta;
+
+
+                //let newWidth = data.originalWidth - snappedDelta;
+                const originalWidth = data['originalWidth'] as number;
+                let newWidth = originalWidth - snappedDelta;
 
                 // Enforce minimum width
                 if (newWidth < minWidth()) {
                     newWidth = minWidth();
-                    newX = data.originalX + data.originalWidth - minWidth();
+                    //newX = data.originalX + data.originalWidth - minWidth();
+                    const originalWidth = data['originalWidth'] as number;
+                    const originalX = data['originalX'] as number;
+                    newX = originalX + originalWidth - minWidth();
                 }
 
                 // Skip ignored positions
@@ -279,7 +291,8 @@ export function Bar(props: BarProps): JSX.Element {
                     );
                     if (constrained === null) return; // Movement blocked
                     // If constraint moved us right, adjust width accordingly
-                    if (constrained.x > newX) {
+                    //if (constrained.x > newX) {
+                    if (constrained.x !== undefined && constrained.x > newX) {
                         newWidth = newWidth - (constrained.x - newX);
                         newX = constrained.x;
                     }
@@ -294,7 +307,10 @@ export function Bar(props: BarProps): JSX.Element {
                 const rawDelta = move.deltaX;
                 const snappedDelta = Math.round(rawDelta / colWidth) * colWidth;
 
-                let newWidth = data.originalWidth + snappedDelta;
+                //let newWidth = data.originalWidth + snappedDelta;
+                const originalWidth = data['originalWidth'] as number;
+                let newWidth = originalWidth + snappedDelta;
+
 
                 // Enforce minimum width
                 newWidth = Math.max(minWidth(), newWidth);
@@ -394,7 +410,7 @@ export function Bar(props: BarProps): JSX.Element {
         }
 
         // Check if clicking on a handle
-        const target = e.target;
+        const target = e.target as HTMLElement;
         if (target.classList && target.classList.contains('handle')) {
             return;
         }
@@ -525,7 +541,7 @@ export function Bar(props: BarProps): JSX.Element {
     // ═══════════════════════════════════════════════════════════════════════════
 
     // Visibility prop for virtualization - hidden bars stay in DOM but are not painted
-    const visible = (): bollean => props.visible ?? true;
+    const visible = (): boolean => props.visible ?? true;
 
     return (
         <g
