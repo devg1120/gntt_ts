@@ -342,12 +342,9 @@ export function BarDemo() {
                 {/* Bars layer - use Index instead of For to prevent component recreation on position updates */}
                 <g class="bars">
                     <Index each={allTasks()}>
-                        {(task) =>  { 
-			  const task_ = task();
-			  //if ( task_ === undefined) { return null ; }
-			 return (
+                        {(task) => (
                             <Bar
-                                task={task_!}
+                                task={task()}
                                 taskStore={taskStore}
                                 ganttConfig={ganttConfig}
                                 onConstrainPosition={(taskId, newX, newY) => {
@@ -391,7 +388,7 @@ export function BarDemo() {
                                     return null;
                                 }}
                             />
-                        )}}
+                        )}
                     </Index>
                 </g>
 

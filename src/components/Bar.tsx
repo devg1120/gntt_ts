@@ -32,7 +32,7 @@ interface ConstrainedResult {
 interface BarProps {
     //task: ProcessedTask | Accessor<ProcessedTask>;
     task: ProcessedTask  ;
-    taskId: string;
+    taskId?: string;
     taskStore?: TaskStore;
     ganttConfig?: GanttConfigStore;
     taskPosition?: TaskPosition | Accessor<TaskPosition | undefined>;
