@@ -183,6 +183,9 @@ export interface GanttTask {
  * Includes computed fields prefixed with _ or $
  */
 export interface ProcessedTask extends Omit<GanttTask, 'dependencies' | 'constraints'> {
+    id: string;
+    invalid: boolean;
+    custom_class: string;
     /** Parsed start date */
     _start: Date;
     /** Parsed end date */

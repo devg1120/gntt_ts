@@ -1,4 +1,4 @@
-import { JSX, createSignal, Show, onCleanup } from 'solid-js';
+import { JSX, createSignal, Show, onCleanup, Accessor } from 'solid-js';
 import {
     computeProgressWidth,
     computeExpectedProgress,
@@ -30,7 +30,9 @@ interface ConstrainedResult {
 }
 
 interface BarProps {
-    task: ProcessedTask | Accessor<ProcessedTask>;
+    //task: ProcessedTask | Accessor<ProcessedTask>;
+    task: ProcessedTask ;
+    taskId: string;
     taskStore?: TaskStore;
     ganttConfig?: GanttConfigStore;
     taskPosition?: TaskPosition | Accessor<TaskPosition | undefined>;
@@ -95,7 +97,11 @@ export function Bar(props: BarProps): JSX.Element {
     // taskId prop can be a value OR an accessor function (for <Index> pooling)
     const taskId = ():string => {
         const id = props.taskId;
-        return typeof id === 'function' ? id() : id ?? props.task?.id;
+	//console.log(id);
+        //return typeof id === 'function' ? id() : id ?? props.task?.id;
+        return  props.task?.id;
+        //return  id() ;
+	//return id;
     };
 
     // Get position directly from taskStore - plain function for virtualized components
@@ -158,10 +164,16 @@ export function Bar(props: BarProps): JSX.Element {
     const { dragState, isDragging, startDrag } = useDrag({
         onDragStart: (data, state) => {
             // Store original values
+	    /*
             data.originalX = x();
             data.originalY = y();
             data.originalWidth = width();
             data.originalProgress = task().progress ?? 0;
+*/
+            data['originalX'] = x();
+            data['originalY'] = y();
+            data['originalWidth'] = width();
+            data['originalProgress'] = task().progress;
 
             // Signal that a drag is in progress (defers expensive recalculations)
             props.taskStore?.setDraggingTaskId?.(task().id);
@@ -170,8 +182,9 @@ export function Bar(props: BarProps): JSX.Element {
             // This enables batch updates during drag for better performance
             if (state === 'dragging_bar') {
                 // Collect tasks that should move together
-                const tasksToMove = new Set();
-
+                //const tasksToMove = new Set();
+                const tasksToMove = new Set<string>();
+/*
                 // Add dependency chain (tasks that depend on this one)
                 if (props.onCollectDependents) {
                     const dependentIds = props.onCollectDependents(task().id);
@@ -187,8 +200,24 @@ export function Bar(props: BarProps): JSX.Element {
                         tasksToMove.add(id);
                     }
                 }
+*/
+                // Add dependency chain (tasks that depend on this one)
+                if (props.onCollectDependents) {
+                    const dependentIds = props.onCollectDependents(task().id);
+                    for (const id of dependentIds) {
+                        tasksToMove.add(id);
+                    }
+                }
 
+                // Add descendants (child tasks for summary bars)
+                if (props.onCollectDescendants) {
+                    const descendantIds = props.onCollectDescendants(task().id);
+                    for (const id of descendantIds) {
+                        tasksToMove.add(id);
+                    }
+                }
                 // Store original positions for all tasks in the batch
+		/*
                 data.dependentOriginals = new Map();
                 for (const id of tasksToMove) {
                     const pos = props.taskStore?.getBarPosition(id);
@@ -196,6 +225,15 @@ export function Bar(props: BarProps): JSX.Element {
                         data.dependentOriginals.set(id, { originalX: pos.x });
                     }
                 }
+*/
+                const dependentOriginals = new Map<string, BatchOriginal>();
+                for (const id of tasksToMove) {
+                    const pos = props.taskStore?.getBarPosition(id);
+                    if (pos) {
+                        dependentOriginals.set(id, { originalX: pos.x });
+                    }
+                }
+                data['dependentOriginals'] = dependentOriginals;
             }
         },
 
@@ -212,6 +250,7 @@ export function Bar(props: BarProps): JSX.Element {
 
             if (state === 'dragging_bar') {
                 // Bar movement - snap to grid
+		/*
                 let newX = snapToGrid(
                     data.originalX + move.deltaX,
                     colWidth,
@@ -220,10 +259,27 @@ export function Bar(props: BarProps): JSX.Element {
 
                 // Calculate delta from original position
                 let deltaX = newX - data.originalX;
+*/
+                const originalX = data['originalX'] as number;
+                let newX = snapToGrid(
+                    originalX + move.deltaX,
+                    colWidth,
+                    ignored,
+                );
+
+                // Calculate delta from original position
+                let deltaX = newX - originalX;
 
                 // Use batch move if we have dependent tasks (for performance)
+		/*
                 if (
                     data.dependentOriginals?.size > 0 &&
+                    props.taskStore.batchMovePositions
+                ) {
+		*/
+                const dependentOriginals = data['dependentOriginals'] as Map<string, BatchOriginal> | undefined;
+                if (
+                    dependentOriginals && dependentOriginals.size > 0 &&
                     props.taskStore.batchMovePositions
                 ) {
                     const dependentOriginals = data['dependentOriginals'] as Map<string, BatchOriginal>;
@@ -395,7 +451,8 @@ export function Bar(props: BarProps): JSX.Element {
                     onResizeEnd?.(task().id);
                 }
             } else if (state === 'dragging_progress') {
-                onProgressChange?.(task().id, task().progress);
+                //onProgressChange?.(task().id, task().progress);
+                onProgressChange?.(task().id, task().progress ?? 0);
             }
         },
     });
@@ -531,7 +588,8 @@ export function Bar(props: BarProps): JSX.Element {
         showHandles() && !readonlyProgress();
 
     // Locked state (from constraint system)
-    const isLocked = (): boolean => task().constraints?.locked ?? false;
+    const isLocked = (): LockState  => task().constraints?.locked ?? false;
+    
 
     // Drag state class
     const dragClass = (): string => (isDragging() ? `dragging ${dragState()}` : '');
