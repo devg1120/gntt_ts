@@ -5,8 +5,6 @@ import { Bar } from './Bar.jsx';
 import { Arrow } from './Arrow.jsx';
 import { resolveMovement } from '../utils/constraintResolver.js';
 
-import { Relationship } from '../types';
-
 /**
  * Bar Demo - Interactive Test Page for Bar Component
  *
@@ -133,7 +131,7 @@ export function BarDemo() {
     // - minDistance: minimum gap (push if closer) - default 10
     // - maxDistance: maximum gap (pull if further)
     // - fixedOffset: tasks move together as a unit
-    const relationships: Relationship[]  = [
+    const relationships = [
         // Start-to-start: Documentation can overlap with Design (no min gap)
         { from: 'task-1', to: 'task-1b', minDistance: -Infinity },
 
@@ -367,7 +365,7 @@ export function BarDemo() {
                                     if (result.type === 'batch') {
                                         // Fixed-offset: calculate delta from original, update all
                                         const deltaX = newX - originalX;
-                                        result.updates?.forEach(u => {
+                                        result.updates.forEach(u => {
                                             if (u.taskId === taskId) {
                                                 taskStore.updateBarPosition(u.taskId, { x: newX });
                                             } else {
@@ -397,18 +395,15 @@ export function BarDemo() {
                     <g class="debug">
                         <For each={allTasks()}>
                             {(task) => {
-                                if (task?.id === undefined) {
-                                    return null;
-				}
-                                const pos = taskStore.getBarPosition(task?.id);
+                                const pos = taskStore.getBarPosition(task.id);
                                 if (!pos) return null;
 
                                 // Find relationships involving this task
-                                const asSuccessor = relationships.filter(r => r.to === task?.id);
-                                const asPredecessor = relationships.filter(r => r.from === task?.id);
+                                const asSuccessor = relationships.filter(r => r.to === task.id);
+                                const asPredecessor = relationships.filter(r => r.from === task.id);
 
                                 // Build constraint info string
-                                const constraintParts: any[] = [];
+                                const constraintParts = [];
 
                                 // Show predecessors with constraint type
                                 asSuccessor.forEach(r => {
@@ -446,7 +441,7 @@ export function BarDemo() {
                                         fill="#666"
                                         font-family="monospace"
                                     >
-                                        {task?.id} | x:{pos.x} w:{pos.width} | {constraintStr}
+                                        {task.id} | x:{pos.x} w:{pos.width} | {constraintStr}
                                     </text>
                                 );
                             }}
@@ -471,20 +466,20 @@ export function BarDemo() {
                                 'align-items': 'center',
                                 gap: '8px',
                                 padding: '4px 8px',
-                                'background': task?.invalid ? '#fee2e2' : task?.constraints?.locked ? '#e5e5e5' : '#fff',
+                                'background': task.invalid ? '#fee2e2' : task.constraints?.locked ? '#e5e5e5' : '#fff',
                                 'border-radius': '4px',
                                 border: '1px solid #ddd',
                             }}>
                                 <span style={{
                                     width: '16px',
                                     height: '16px',
-                                    'background': task?.color,
+                                    'background': task.color,
                                     'border-radius': '3px',
                                 }}></span>
-                                <span style={{ flex: 1 }}>{task?.name}</span>
-                                <span style={{ color: '#666' }}>{task?.progress}%</span>
-                                {task?.constraints?.locked && <span>🔒</span>}
-                                {task?.invalid && <span>⚠️</span>}
+                                <span style={{ flex: 1 }}>{task.name}</span>
+                                <span style={{ color: '#666' }}>{task.progress}%</span>
+                                {task.constraints?.locked && <span>🔒</span>}
+                                {task.invalid && <span>⚠️</span>}
                             </div>
                         )}
                     </For>

@@ -233,6 +233,9 @@ export interface Relationship {
 
     predecessorId: string;
     successorId: string;
+    fixedOffset: number;
+    maxDistance:  number;
+    minDistance: number;
 }
 
 /**

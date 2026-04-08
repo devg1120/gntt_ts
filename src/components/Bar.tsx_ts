@@ -31,7 +31,7 @@ interface ConstrainedResult {
 
 interface BarProps {
     //task: ProcessedTask | Accessor<ProcessedTask>;
-    task: ProcessedTask  ;
+    task: ProcessedTask ;
     taskId: string;
     taskStore?: TaskStore;
     ganttConfig?: GanttConfigStore;
