@@ -88,7 +88,7 @@ const CONSTRAINT_TYPE_NAMES: Record<DependencyType, string> = {
 };
 
 function formatRelationshipLine(rel: Relationship, taskId: string, arrow: string): string {
-    const typeName = CONSTRAINT_TYPE_NAMES[rel.type] || rel.type;
+    const typeName = CONSTRAINT_TYPE_NAMES[rel.type!] || rel.type;
     const lag = rel.lag ?? 0;
     const lagStr = lag ? `, lag: ${lag} day${lag !== 1 ? 's' : ''}` : '';
     return `  ${rel.type} ${arrow} ${taskId} (${typeName}${lagStr})`;

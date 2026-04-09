@@ -12,6 +12,7 @@ import type {
     NormalizedConstraints,
     GanttTask,
     ProcessedTask,
+    LockState,
 } from '../types';
 
 interface ProcessConfig {
@@ -241,7 +242,7 @@ export function processTask(task: ProcessedTask , index: number): any {
     }
 
     // Parse start date
-    processed._start = date_utils.parse(task.start);
+    processed._start = date_utils.parse(task.start!);
 
     // Parse or calculate end date
     if (task.end) {
@@ -290,18 +291,25 @@ export function processTask(task: ProcessedTask , index: number): any {
     processed.progress = Math.max(0, Math.min(100, processed.progress));
 
     // Default constraints
-    /* GUSA
+   
     processed.constraints = {
         locked: false,
         ...task.constraints,
     };
-*/
 
+/*
     processed.constraints = {
         ...task.constraints,
     };
-    processed.constraints.locked = false;
+    */
+   /*
+    const c: LockState = {
+        ...task.constraints,
+    };
+    processed.constraints = c;
 
+    processed.constraints.locked = false;
+*/
 
     // Preserve hierarchy fields (parentId, type)
     // These will be processed by buildHierarchy in Gantt.jsx
@@ -522,7 +530,7 @@ export function processTasks(
         task._isHidden = isHidden;
 
         // Build relationships from dependencies
-        for (const dep of task.dependencies) {
+        for (const dep of task.dependencies!) {
             // Find the predecessor task
             const predecessor = processedTasks.find((t) => t.id === dep.id);
             if (predecessor) {
