@@ -159,7 +159,10 @@ export function createTaskStore(): TaskStore {
         setTasks(
             produce((state) => {
                 if (state[id]) {
-                    state[id].$bar = { ...state[id].$bar, ...position };
+                   // state[id].$bar = { ...state[id].$bar, ...position };
+                    const bar: BarPosition = { ...state[id].$bar!, ...position };
+                    state[id].$bar = bar;
+                    //state[id]['$bar'] = { ...state[id].$bar, ...position };
                 }
             }),
         );
