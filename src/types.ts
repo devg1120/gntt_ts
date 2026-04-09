@@ -186,58 +186,60 @@ export interface ProcessedTask extends Omit<GanttTask, 'dependencies' | 'constra
     id: string;
     invalid: boolean;
     custom_class: string;
-    /** Parsed start date */
     _start: Date;
-    /** Parsed end date */
     _end: Date;
-    /** Task index in array */
     _index: number;
-    /** Resource row index (-1 if hidden) */
     _resourceIndex: number;
-    /** Whether task is hidden (collapsed group) */
     _isHidden: boolean;
-    /** Child task IDs (for parent tasks) */
     _children: string[];
-    /** Nesting depth */
     _depth: number;
-    /** Subtask layout mode */
     subtaskLayout?: 'sequential' | 'parallel' | 'mixed';
-    /** Computed bar position */
     //_bar: BarPosition;
     //_bar: BarPosition;
     $bar: BarPosition;
-    /** Normalized dependencies (always array with defaults applied) */
     dependencies: NormalizedDependency[];
-    /** Normalized constraints (always has locked field) */
     constraints: NormalizedConstraints;
 }
 
 /**
  * Relationship between tasks (derived from dependencies)
  */
+
 export interface Relationship {
-    /** Predecessor task ID */
     from: string;
-    /** Successor task ID */
     to: string;
-    /** Dependency type */
-    type: DependencyType;
-    /** Lag in hours */
-    lag: number;
-    /** Minimum offset from lag (default: 0) */
+    type?: DependencyType;
+    lag?: number;
     min?: number;
-    /** Maximum offset (undefined = elastic, 0 = fixed, N = bounded) */
     max?: number;
-    /** Whether this is an elastic constraint (can grow but not shrink) */
     elastic?: boolean;
 
-    predecessorId: string;
-    successorId: string;
-    fixedOffset: number;
-    maxDistance:  number;
-    minDistance: number;
+    predecessorId?: string;
+    successorId?: string;
+    //fixedOffset: number;
+    fixedOffset?: boolean;
+    maxDistance?:  number;
+    minDistance?: number;
 }
 
+/*
+export interface Relationship {
+    from: string;
+    to: string;
+    type?: DependencyType;
+    lag?: number;
+    min?: number;
+    max?: number;
+    elastic?: boolean;
+
+    predecessorId?: string;
+    successorId?: string;
+    //fixedOffset: number;
+    fixedOffset?: boolean;
+    maxDistance?:  number;
+    minDistance?: number;
+}
+*/
 /**
  * Result of constraint resolution
  */

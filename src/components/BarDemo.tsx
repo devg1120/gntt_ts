@@ -5,7 +5,9 @@ import { Bar } from './Bar.jsx';
 import { Arrow } from './Arrow.jsx';
 import { resolveMovement } from '../utils/constraintResolver.js';
 
-import { Relationship } from '../types';
+import { Relationship,
+         ProcessedTask
+	 } from '../types';
 
 /**
  * Bar Demo - Interactive Test Page for Bar Component
@@ -33,7 +35,7 @@ export function BarDemo() {
     const [showDebug, setShowDebug] = createSignal(false);
 
     // Helper to create dates relative to today
-    const daysFromNow = (days) => {
+    const daysFromNow = (days: number) => {
         const date = new Date();
         date.setDate(date.getDate() + days);
         date.setHours(0, 0, 0, 0);
@@ -42,7 +44,7 @@ export function BarDemo() {
 
     // Sample tasks with start/end dates for expected progress calculation
     // Dates are set so some tasks are ahead, some behind schedule
-    const sampleTasks = [
+    const sampleTasks: ProcessedTask[] = [
         {
             id: 'task-1',
             name: 'Design',
@@ -166,12 +168,12 @@ export function BarDemo() {
 
     // Initialize tasks
     onMount(() => {
-        const tasks = sampleTasks.map((task, i) => ({
+        const tasks : ProcessedTask[] = sampleTasks.map((task, i) => ({
             ...task,
             $bar: {
-                x: barPositions[i].x,
+                x: barPositions[i]?.x!,
                 y: 60 + task._index * 48,
-                width: barPositions[i].width,
+                width: barPositions[i]?.width!,
                 height: 30,
             },
         }));
@@ -191,7 +193,7 @@ export function BarDemo() {
     };
 
     // Simulate progress update
-    const updateProgress = (taskId, delta) => {
+    const updateProgress = (taskId: string, delta: number) => {
         const task = taskStore.getTask(taskId);
         if (task) {
             const newProgress = Math.max(0, Math.min(100, (task.progress || 0) + delta));
@@ -201,12 +203,12 @@ export function BarDemo() {
 
     // Reset positions (same as initial)
     const resetPositions = () => {
-        const tasks = sampleTasks.map((task, i) => ({
+        const tasks: ProcessedTask[] = sampleTasks.map((task, i) => ({
             ...task,
             $bar: {
-                x: barPositions[i].x,
+                x: barPositions[i]?.x!,
                 y: 60 + task._index * 48,
-                width: barPositions[i].width,
+                width: barPositions[i]?.width!,
                 height: 30,
             },
         }));
