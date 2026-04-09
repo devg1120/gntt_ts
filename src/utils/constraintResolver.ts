@@ -208,9 +208,9 @@ export function calculateMinSuccessorX(
     lagPx : number,
     predNewX : any = null,
 ) {
-    const predX = predNewX ?? predTask.$bar.x;
-    const predWidth = predTask.$bar.width;
-    const succWidth = succTask.$bar.width;
+    const predX = predNewX ?? predTask.$bar?.x;
+    const predWidth = predTask.$bar?.width;
+    const succWidth = succTask.$bar?.width;
 
     switch (type) {
         case DEPENDENCY_TYPES.FS:
@@ -227,13 +227,13 @@ export function calculateMinSuccessorX(
             // succ.end >= pred.end + lag
             // succ.x + succ.width >= pred.x + pred.width + lag
             // succ.x >= pred.x + pred.width - succ.width + lag
-            return predX + predWidth - succWidth + lagPx;
+            return predX + predWidth - succWidth! + lagPx;
 
         case DEPENDENCY_TYPES.SF:
             // succ.end >= pred.start + lag
             // succ.x + succ.width >= pred.x + lag
             // succ.x >= pred.x - succ.width + lag
-            return predX - succWidth + lagPx;
+            return predX - succWidth! + lagPx;
 
         default:
             // Default to FS behavior
@@ -289,11 +289,11 @@ export function calculatePushAmount(
         lagPx,
         predNewX,
     );
-    const currentSuccX = succTask.$bar.x;
+    const currentSuccX = succTask.$bar?.x;
 
     // Push amount is how much we need to move successor to satisfy constraint
-    if (currentSuccX < minSuccX) {
-        return minSuccX - currentSuccX;
+    if (currentSuccX! < minSuccX) {
+        return minSuccX - currentSuccX!;
     }
     return 0;
 }
@@ -359,8 +359,8 @@ export function resolveMovement(
         }
 
         // Calculate delta and move all linked tasks
-        const deltaX = newX - task.$bar.x;
-        const deltaY = newY - task.$bar.y;
+        const deltaX = newX - task.$bar?.x!;
+        const deltaY = newY - task.$bar?.y!;
 
         const updates = [{ taskId, x: newX, y: newY }];
 
@@ -369,8 +369,8 @@ export function resolveMovement(
             if (linkedTask) {
                 updates.push({
                     taskId: link.taskId,
-                    x: linkedTask.$bar.x + deltaX,
-                    y: linkedTask.$bar.y + deltaY,
+                    x: linkedTask.$bar?.x! + deltaX,
+                    y: linkedTask.$bar?.y! + deltaY,
                 });
             }
         });
@@ -414,16 +414,16 @@ export function resolveMovement(
                         task,
                         otherTask,
                         lagPx,
-                        otherTask.$bar.x,
+                        otherTask.$bar?.x!,
                     );
                     newX = Math.min(newX, maxPredX);
                 } else {
                     // Push successor forward
-                    const newSuccX = otherTask.$bar.x + pushAmount;
+                    const newSuccX = otherTask.$bar?.x! + pushAmount;
                     const result = resolveMovement(
                         otherTaskId,
                         newSuccX,
-                        otherTask.$bar.y,
+                        otherTask.$bar?.y!,
                         taskStore,
                         relationships,
                         options,
@@ -482,8 +482,8 @@ export function calculateMaxPredecessorX(
     lagPx : number,
     succX : number,
 ) {
-    const predWidth = predTask.$bar.width;
-    const succWidth = succTask.$bar.width;
+    const predWidth = predTask.$bar?.width!;
+    const succWidth = succTask.$bar?.width!;
 
     switch (type) {
         case DEPENDENCY_TYPES.FS:
@@ -686,11 +686,11 @@ export function resolveAfterResize(
                 succTask,
                 lagPx,
             );
-            if (succTask.$bar.x < minSuccX) {
+            if (succTask.$bar?.x! < minSuccX) {
                 const result = resolveMovement(
                     rel.to,
                     minSuccX,
-                    succTask.$bar.y,
+                    succTask.$bar?.y!,
                     taskStore,
                     relationships,
                     options,
@@ -741,7 +741,7 @@ export function resolveAfterResize(
 
         // Recalculate our own position based on new width
         const minSuccX = calculateMinSuccessorX(type, predTask, task, lagPx);
-        if (task.$bar.x < minSuccX) {
+        if (task.$bar?.x! < minSuccX) {
             taskStore.updateBarPosition(taskId, { x: minSuccX });
         }
     }
