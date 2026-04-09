@@ -58,7 +58,7 @@ export function ArrowDemo() {
 
     const scenarios = [
         // Section 1: Anchor Types
-        { id: 'anchor-auto-from', name: 'Auto', x: 50, y: 100, w: 70, h: 24 },
+        { id: 'anchor-auto-from', name: 'Auto', x: 50, y: 100, w: 70, h: 24 , draggable: true},
         { id: 'anchor-auto-to', name: 'Target', x: 180, y: 160, w: 70, h: 24 },
 
         { id: 'anchor-top-from', name: 'Top', x: 50, y: 220, w: 70, h: 24 },
@@ -225,7 +225,7 @@ export function ArrowDemo() {
 
     return (
         <div style={{ padding: '20px', 'font-family': 'system-ui, sans-serif', 'max-width': '1200px', margin: '0 auto' }}>
-            <h1 style={{ 'margin-bottom': '10px' }}>Arrow Component Demo</h1>
+            <h1 style={{ 'margin-bottom': '10px' }}>TS Arrow Component Demo</h1>
             <p style={{ color: '#666', 'margin-bottom': '20px' }}>
                 Comprehensive demonstration of all Arrow component parameters.
                 The Arrow is a <strong>pure visual renderer</strong> - it has no knowledge of constraints or task semantics.

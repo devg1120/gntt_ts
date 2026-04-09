@@ -217,7 +217,7 @@ export function BarDemo() {
 
     return (
         <div style={{ padding: '20px', 'font-family': 'system-ui, sans-serif', 'max-width': '900px', margin: '0 auto' }}>
-            <h1 style={{ 'margin-bottom': '10px' }}>GS Bar Component Demo</h1>
+            <h1 style={{ 'margin-bottom': '10px' }}>GS TS Bar Component Demo</h1>
             <p style={{ color: '#666', 'margin-bottom': '20px' }}>
                 Interactive bar component with drag, resize, and progress editing.
             </p>
