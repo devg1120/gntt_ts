@@ -142,7 +142,7 @@ export interface GanttTask {
     /** Display name */
     name: string;
     /** Start datetime ("YYYY-MM-DD HH:MM") */
-    start: string;
+    start?: string;
     /** End datetime ("YYYY-MM-DD HH:MM") - optional if duration provided */
     end?: string;
     /** Duration string (e.g., "2d", "8h") - alternative to end */
@@ -182,6 +182,7 @@ export interface GanttTask {
  * Processed task (internal representation after processing)
  * Includes computed fields prefixed with _ or $
  */
+/*
 export interface ProcessedTask extends Omit<GanttTask, 'dependencies' | 'constraints'> {
     id: string;
     invalid: boolean;
@@ -200,7 +201,25 @@ export interface ProcessedTask extends Omit<GanttTask, 'dependencies' | 'constra
     dependencies: NormalizedDependency[];
     constraints: NormalizedConstraints;
 }
-
+*/
+export interface ProcessedTask extends Omit<GanttTask, 'dependencies' | 'constraints'> {
+    id: string;
+    invalid?: boolean;
+    custom_class?: string;
+    _start: Date;
+    _end: Date;
+    _index: number;
+    _resourceIndex?: number;
+    _isHidden?: boolean;
+    _children?: string[];
+    _depth?: number;
+    subtaskLayout?: 'sequential' | 'parallel' | 'mixed';
+    //_bar: BarPosition;
+    //_bar: BarPosition;
+    $bar: BarPosition;
+    dependencies?: NormalizedDependency[];
+    constraints?: NormalizedConstraints;
+}
 /**
  * Relationship between tasks (derived from dependencies)
  */

@@ -573,7 +573,7 @@ export function Bar(props: BarProps): JSX.Element {
         'var(--g-expected-progress-color, rgba(0,0,0,0.2))';
 
     // Check if task has subtasks (for fill opacity)
-    const hasSubtasks = (): boolean => task()._children?.length > 0;
+    const hasSubtasks = (): boolean => task()._children?.length! > 0;
 
     // Invalid state
     const isInvalid = (): boolean => task().invalid ?? false;
