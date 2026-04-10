@@ -4,7 +4,7 @@ import { Arrow, ArrowConfig, ARROW_DEFAULTS } from './Arrow.jsx';
 
 import type  { HeadShape, AnchorType, RoutingType } from './Arrow';
 
-import type { BarPosition, DependencyType }   from '../types';
+import type { ProcessedTask, BarPosition, DependencyType }   from '../types';
 
 
 /**
@@ -112,7 +112,8 @@ export function ArrowDemo() {
     // DEMO SCENARIOS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    const scenarios = [
+    //const scenarios: ProcessedTask[]   = [
+    const scenarios: any   = [
         // Section 1: Anchor Types
         { id: 'anchor-auto-from', name: 'Auto', x: 50, y: 100, w: 70, h: 24 , draggable: true},
         { id: 'anchor-auto-to', name: 'Target', x: 180, y: 160, w: 70, h: 24 },
@@ -225,7 +226,7 @@ export function ArrowDemo() {
 
     onMount(() => {
         // Initialize task store with scenarios
-        const tasks = scenarios.map((s, i) => ({
+        const tasks = scenarios.map((s: any, i: any) => ({
             id: s.id,
             name: s.name,
             _index: i,
