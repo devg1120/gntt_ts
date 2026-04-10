@@ -13,7 +13,7 @@ interface Point {
 
 type AnchorType = 'auto' | 'top' | 'bottom' | 'left' | 'right' | 'center';
 type RoutingType = 'straight' | 'orthogonal';
-export type HeadShape = 'chevron' | 'triangle' | 'diamond' | 'circle' | 'none';
+type HeadShape = 'chevron' | 'triangle' | 'diamond' | 'circle' | 'none';
 
 interface ArrowConfig {
     startAnchor: AnchorType;
@@ -55,7 +55,8 @@ interface ArrowProps {
     strokeDasharray?: string;
     strokeLinecap?: 'butt' | 'round' | 'square';
     strokeLinejoin?: 'arcs' | 'bevel' | 'miter' | 'miter-clip' | 'round';
-    headShape?: HeadShape;
+    headShape?: HeadShape ;
+    //headShape?: any;
     headSize?: number;
     headFill?: boolean;
     class?: string;

@@ -2,10 +2,7 @@ import { createSignal, createMemo, For, onMount } from 'solid-js';
 import { createTaskStore } from '../stores/taskStore.js';
 import { Arrow, ArrowConfig, ARROW_DEFAULTS } from './Arrow.jsx';
 
-import type  { HeadShape, AnchorType, RoutingType } from './Arrow';
-
-import type { BarPosition, DependencyType }   from '../types';
-
+import type  { HeadShape } from './Arrow';
 
 /**
  * Comprehensive Arrow Demo Page
@@ -17,30 +14,6 @@ import type { BarPosition, DependencyType }   from '../types';
  * - Arrow heads (shape, size, fill)
  * - Interactive dragging
  */
-
-interface ArrowConfigLocal {
-    //from: BarPosition;
-    //to: BarPosition;
-    from?: string;
-    to?: string;
-    label?:  string;
-    startAnchor?: AnchorType;
-    startOffset?: number;
-    endAnchor?: AnchorType;
-    endOffset?: number;
-    routing?: RoutingType;
-    curveRadius?: number;
-    headSize?: number;
-    headShape?: HeadShape;
-    headFill?: boolean;
-    dependencyType?: DependencyType;
-    stroke?: string;
-    strokeWidth?: number;
-    strokeOpacity?: number;
-    strokeDasharray?: string;
-    strokeLinecap?: string;
-}
-
 export function ArrowDemo() {
     const taskStore = createTaskStore();
 
@@ -75,8 +48,7 @@ export function ArrowDemo() {
         headFill: false,
     });
    */
-    //const arrowConfig: ArrowConfig = {
-    const arrowConfig: ArrowConfigLocal = {
+    const arrowConfig: ArrowConfig = {
         // Anchoring
         startAnchor: 'auto',
         startOffset: 0.5,
@@ -101,8 +73,7 @@ export function ArrowDemo() {
 
 
     // Dragging state
-    //const [dragging, setDragging] = createSignal(null);
-    const [dragging, setDragging] = createSignal<string | null>(null);
+    const [dragging, setDragging] = createSignal(null);
     const [dragOffset, setDragOffset] = createSignal({ x: 0, y: 0 });
 
     // Debug mode
@@ -185,7 +156,7 @@ export function ArrowDemo() {
     ];
 
     // Arrow definitions
-    const arrows: ArrowConfigLocal[] = [
+    const arrows = [
         // Anchor demos
         { from: 'anchor-auto-from', to: 'anchor-auto-to', label: 'Auto Anchor', startAnchor: 'auto' },
         { from: 'anchor-top-from', to: 'anchor-top-to', label: 'Top Anchor', startAnchor: 'top', stroke: '#9b59b6' },
@@ -239,8 +210,7 @@ export function ArrowDemo() {
     // DRAG HANDLERS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    //const handleMouseDown = (taskId: string, event: MouseEvent) => {
-    const handleMouseDown = (taskId: string, event: any) => {
+    const handleMouseDown = (taskId, event) => {
         const task = taskStore.getTask(taskId);
         if (!task || !task.draggable) return;
 
@@ -251,12 +221,11 @@ export function ArrowDemo() {
         const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
 
         setDragging(taskId);
-        setDragOffset({ x: svgP.x - task.$bar?.x!, y: svgP.y - task.$bar?.y! });
+        setDragOffset({ x: svgP.x - task.$bar.x, y: svgP.y - task.$bar.y });
         event.preventDefault();
     };
 
-    //const handleMouseMove = (event: MouseEvent) => {
-    const handleMouseMove = (event: any) => {
+    const handleMouseMove = (event) => {
         const taskId = dragging();
         if (!taskId) return;
 
