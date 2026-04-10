@@ -2,6 +2,8 @@ import { createSignal, createMemo, For, onMount } from 'solid-js';
 import { createTaskStore } from '../stores/taskStore.js';
 import { Arrow, ARROW_DEFAULTS } from './Arrow.jsx';
 
+import type  { HeadShape } from './Arrow';
+
 /**
  * Comprehensive Arrow Demo Page
  *

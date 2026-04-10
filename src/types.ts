@@ -219,6 +219,7 @@ export interface ProcessedTask extends Omit<GanttTask, 'dependencies' | 'constra
     $bar?: BarPosition;
     dependencies?: NormalizedDependency[];
     constraints?: NormalizedConstraints;
+    draggable?: boolean;
 }
 /**
  * Relationship between tasks (derived from dependencies)
