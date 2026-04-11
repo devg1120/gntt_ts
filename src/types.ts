@@ -205,6 +205,13 @@ export interface ProcessedTask extends Omit<GanttTask, 'dependencies' | 'constra
 export interface ProcessedTask extends Omit<GanttTask, 'dependencies' | 'constraints'> {
     id: string;
     invalid?: boolean;
+
+    name: string;
+    progress: number;
+    color: string;
+    color_progress: string;
+    //constraints?: TaskConstraints;
+
     custom_class?: string;
     _start: Date;
     _end: Date;

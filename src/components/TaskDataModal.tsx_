@@ -11,10 +11,10 @@ import { formatTaskFull, highlightJSON } from '../utils/jsonFormatter.js';
  * @param {() => Array} props.relationships - Reactive relationships array
  * @param {Function} props.onClose - Close callback
  */
-export function TaskDataModal(props: any) {
+export function TaskDataModal(props) {
     const [copyFeedback, setCopyFeedback] = createSignal('');
 
-    const formatted = createMemo(():any => {
+    const formatted = createMemo(() => {
         const task = props.task?.();
         if (!task) return null;
         return formatTaskFull(
@@ -38,13 +38,13 @@ export function TaskDataModal(props: any) {
         }
     };
 
-    const handleBackdropClick = (e:any) => {
+    const handleBackdropClick = (e) => {
         if (e.target === e.currentTarget) {
             props.onClose?.();
         }
     };
 
-    const handleKeyDown = (e: any) => {
+    const handleKeyDown = (e) => {
         if (e.key === 'Escape') {
             props.onClose?.();
         }

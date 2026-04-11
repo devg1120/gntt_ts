@@ -530,7 +530,7 @@ const styles = {
         'font-weight': '600',
     },
     infoText: {
-        margin: 0,
+        //margin: 0,
         'font-size': '13px',
         'line-height': '1.5',
     },
