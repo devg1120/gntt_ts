@@ -1022,7 +1022,7 @@ export default function ShowcaseDemo() {
         <div style={styles.container}>
             {/* Header */}
             <div style={styles.header}>
-                <h1 style={styles.title}>TS Props Showcase</h1>
+                <h1 style={styles.title}>Props Showcase</h1>
                 <p style={styles.subtitle}>
                     Interactive demonstration of all task and connector
                     configuration options
