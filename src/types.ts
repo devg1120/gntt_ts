@@ -218,8 +218,10 @@ export interface ProcessedTask extends Omit<GanttTask, 'dependencies' | 'constra
     //_bar: BarPosition;
     $bar?: BarPosition;
     dependencies?: NormalizedDependency[];
-    constraints?: NormalizedConstraints;
+    //constraints?: NormalizedConstraints;
+    constraints?: TaskConstraints;
     draggable?: boolean;
+    //scenario?: string;
 }
 /**
  * Relationship between tasks (derived from dependencies)
@@ -240,6 +242,7 @@ export interface Relationship {
     fixedOffset?: boolean;
     maxDistance?:  number;
     minDistance?: number;
+    color?: string;
 }
 
 /*
