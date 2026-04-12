@@ -1,5 +1,10 @@
 @import './light.css';
 
+.dragging_bar {
+        background: red;
+
+}
+
 .gantt-container {
     line-height: 14.5px;
     position: relative;

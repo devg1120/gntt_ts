@@ -631,7 +631,7 @@ export function Bar(props: BarProps): JSX.Element {
                         fill: isLocked()
                             ? '#7f8c8d'
                             : isDragging()
-                              ? '#2c3e50'
+                              ? '#0080ff'    /* GUSA */
                               : barColor(),
                         'fill-opacity': isLocked() || isDragging()
                             ? 1

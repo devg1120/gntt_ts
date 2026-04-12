@@ -167,7 +167,7 @@ export function useDrag(options: UseDragOptions = {}): UseDragResult {
         if (dragState() !== 'idle') {
             return;
         }
-
+        
         const target = e.currentTarget as Element | null;
         const svg = target?.ownerDocument?.querySelector('svg.gantt') as SVGSVGElement | null
             || (target as SVGElement)?.ownerSVGElement
