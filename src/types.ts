@@ -209,7 +209,7 @@ export interface ProcessedTask extends Omit<GanttTask, 'dependencies' | 'constra
     name: string;
     progress: number;
     color: string;
-    color_progress: string;
+    color_progress?: string;
     //constraints?: TaskConstraints;
 
     custom_class?: string;

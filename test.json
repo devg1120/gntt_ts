@@ -19,6 +19,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["src/components/ConstraintDemo.tsx"],
+  "include": ["src/components/ShowcaseDemo.tsx"],
   "exclude": ["node_modules", "dist", "dist-demo"]
 }

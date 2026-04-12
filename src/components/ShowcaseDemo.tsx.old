@@ -1116,245 +1116,6 @@ export default function ShowcaseDemo() {
                 </p>
             </div>
 
-
-            {/* Live Preview */}
-            <div style={styles.svgContainer}>
-                <svg
-                    width="100%"
-                    height="300"
-                    viewBox="0 0 900 300"
-                    style={{ display: 'block' }}
-                >
-                    {/* Grid pattern */}
-                    <defs>
-                        <pattern
-                            id="showcase-grid"
-                            width="45"
-                            height="45"
-                            patternUnits="userSpaceOnUse"
-                        >
-                            <path
-                                d="M 45 0 L 0 0 0 45"
-                                fill="none"
-                                stroke="#f0f0f0"
-                                stroke-width="0.5"
-                            />
-                        </pattern>
-                    </defs>
-                    <rect
-                        width="100%"
-                        height="100%"
-                        fill="url(#showcase-grid)"
-                    />
-
-                    {/* Header area */}
-                    <rect x="0" y="0" width="800" height="50" fill="#f8f9fa" />
-                    <text
-                        x="400"
-                        y="30"
-                        text-anchor="middle"
-                        font-size="12"
-                        fill="#666"
-                    >
-                        Drag tasks to test interactions and constraints
-                    </text>
-
-                    {/* Arrow A→B */}
-                    <Arrow
-                        from={getTaskAPos()}
-                        to={getTaskBPos()}
-                        dependencyType={constraintConfig.type || 'FS'}
-                        startAnchor={arrowConfig.startAnchor}
-                        endAnchor={arrowConfig.endAnchor}
-                        startOffset={arrowConfig.startOffset ?? undefined}
-                        endOffset={arrowConfig.endOffset}
-                        routing={arrowConfig.routing}
-                        curveRadius={arrowConfig.curveRadius}
-                        stroke={arrowConfig.stroke}
-                        strokeWidth={arrowConfig.strokeWidth}
-                        strokeOpacity={arrowConfig.strokeOpacity}
-                        strokeDasharray={arrowConfig.strokeDasharray}
-                        strokeLinecap={arrowConfig.strokeLinecap}
-                        strokeLinejoin={arrowConfig.strokeLinejoin}
-                        headShape={arrowConfig.headShape}
-                        headSize={arrowConfig.headSize}
-                        headFill={arrowConfig.headFill}
-                    />
-
-                    {/* Arrow B→C */}
-                    <Arrow
-                        from={getTaskBPos()}
-                        to={getTaskCPos()}
-                        dependencyType={constraintConfig.type || 'FS'}
-                        startAnchor={arrowConfig.startAnchor}
-                        endAnchor={arrowConfig.endAnchor}
-                        startOffset={arrowConfig.startOffset ?? undefined}
-                        endOffset={arrowConfig.endOffset}
-                        routing={arrowConfig.routing}
-                        curveRadius={arrowConfig.curveRadius}
-                        stroke={arrowConfig.stroke}
-                        strokeWidth={arrowConfig.strokeWidth}
-                        strokeOpacity={arrowConfig.strokeOpacity}
-                        strokeDasharray={arrowConfig.strokeDasharray}
-                        strokeLinecap={arrowConfig.strokeLinecap}
-                        strokeLinejoin={arrowConfig.strokeLinejoin}
-                        headShape={arrowConfig.headShape}
-                        headSize={arrowConfig.headSize}
-                        headFill={arrowConfig.headFill}
-                    />
-
-                    {/* Arrow C→D */}
-                    <Arrow
-                        from={getTaskCPos()}
-                        to={getTaskDPos()}
-                        dependencyType={constraintConfig.type || 'FS'}
-                        startAnchor={arrowConfig.startAnchor}
-                        endAnchor={arrowConfig.endAnchor}
-                        startOffset={arrowConfig.startOffset ?? undefined}
-                        endOffset={arrowConfig.endOffset}
-                        routing={arrowConfig.routing}
-                        curveRadius={arrowConfig.curveRadius}
-                        stroke={arrowConfig.stroke}
-                        strokeWidth={arrowConfig.strokeWidth}
-                        strokeOpacity={arrowConfig.strokeOpacity}
-                        strokeDasharray={arrowConfig.strokeDasharray}
-                        strokeLinecap={arrowConfig.strokeLinecap}
-                        strokeLinejoin={arrowConfig.strokeLinejoin}
-                        headShape={arrowConfig.headShape}
-                        headSize={arrowConfig.headSize}
-                        headFill={arrowConfig.headFill}
-                    />
-
-                    {/* Task A */}
-                    <Bar
-                        task={{
-                            id: 'task-a',
-                            name: taskConfig.name,
-                            progress: taskConfig.progress,
-                            color: taskConfig.color,
-                            color_progress: taskConfig.color_progress,
-                            constraints: { locked: taskConfig.locked },
-                            invalid: taskConfig.invalid,
-			    _start:daysFromNow(1),
-			    _end:daysFromNow(2),
-			    _index:1,
-                        }}
-                        taskStore={taskStore}
-                        cornerRadius={taskConfig.cornerRadius}
-                        readonly={globalConfig.readonly}
-                        readonlyDates={globalConfig.readonlyDates}
-                        readonlyProgress={globalConfig.readonlyProgress}
-                        showExpectedProgress={globalConfig.showExpectedProgress}
-                        columnWidth={
-                            globalConfig.snapToGrid
-                                ? globalConfig.columnWidth
-                                : 1
-                        }
-                        onConstrainPosition={handleConstrainPosition}
-                        onResizeEnd={handleResizeEnd}
-                        onHover={handleTaskHover}
-                        onHoverEnd={handleTaskHoverEnd}
-                        onTaskClick={handleTaskClick}
-                    />
-
-                    {/* Task B */}
-                    <Bar
-                        task={{
-                            id: 'task-b',
-                            name: taskBConfig.name,
-                            progress: taskBConfig.progress,
-                            color: taskBConfig.color,
-                            color_progress: taskBConfig.color_progress,
-                            constraints: { locked: taskBConfig.locked },
-			    _start:daysFromNow(3),
-			    _end:daysFromNow(4),
-			    _index:2,
-                        }}
-                        taskStore={taskStore}
-                        cornerRadius={3}
-                        readonly={globalConfig.readonly}
-                        readonlyDates={globalConfig.readonlyDates}
-                        readonlyProgress={globalConfig.readonlyProgress}
-                        columnWidth={
-                            globalConfig.snapToGrid
-                                ? globalConfig.columnWidth
-                                : 1
-                        }
-                        onConstrainPosition={handleConstrainPosition}
-                        onResizeEnd={handleResizeEnd}
-                        onHover={handleTaskHover}
-                        onHoverEnd={handleTaskHoverEnd}
-                        onTaskClick={handleTaskClick}
-                    />
-
-                    {/* Task C */}
-                    <Bar
-                        task={{
-                            id: 'task-c',
-                            name: taskCConfig.name,
-                            progress: taskCConfig.progress,
-                            color: taskCConfig.color,
-                            color_progress: taskCConfig.color_progress,
-                            constraints: { locked: taskCConfig.locked },
-			    _start:daysFromNow(5),
-			    _end:daysFromNow(6),
-			    _index:3,
-                        }}
-                        taskStore={taskStore}
-                        cornerRadius={3}
-                        readonly={globalConfig.readonly}
-                        readonlyDates={globalConfig.readonlyDates}
-                        readonlyProgress={globalConfig.readonlyProgress}
-                        columnWidth={
-                            globalConfig.snapToGrid
-                                ? globalConfig.columnWidth
-                                : 1
-                        }
-                        onConstrainPosition={handleConstrainPosition}
-                        onResizeEnd={handleResizeEnd}
-                        onHover={handleTaskHover}
-                        onHoverEnd={handleTaskHoverEnd}
-                        onTaskClick={handleTaskClick}
-                    />
-
-                    {/* Task D */}
-                    <Bar
-                        task={{
-                            id: 'task-d',
-                            name: taskDConfig.name,
-                            progress: taskDConfig.progress,
-                            color: taskDConfig.color,
-                            color_progress: taskDConfig.color_progress,
-                            constraints: { locked: taskDConfig.locked },
-			    _start:daysFromNow(7),
-			    _end:daysFromNow(8),
-			    _index:4,
-                        }}
-                        taskStore={taskStore}
-                        cornerRadius={3}
-                        readonly={globalConfig.readonly}
-                        readonlyDates={globalConfig.readonlyDates}
-                        readonlyProgress={globalConfig.readonlyProgress}
-                        columnWidth={
-                            globalConfig.snapToGrid
-                                ? globalConfig.columnWidth
-                                : 1
-                        }
-                        onConstrainPosition={handleConstrainPosition}
-                        onResizeEnd={handleResizeEnd}
-                        onHover={handleTaskHover}
-                        onHoverEnd={handleTaskHoverEnd}
-                        onTaskClick={handleTaskClick}
-                    />
-                </svg>
-            </div>
-
-
-
-
-
-
-
             {/* Preset Buttons */}
             <div style={styles.presetBar}>
                 <For each={Object.entries(PRESETS)}>
@@ -2091,6 +1852,237 @@ export default function ShowcaseDemo() {
                 </div>
             </div>
 
+            {/* Live Preview */}
+            <div style={styles.svgContainer}>
+                <svg
+                    width="100%"
+                    height="300"
+                    viewBox="0 0 900 300"
+                    style={{ display: 'block' }}
+                >
+                    {/* Grid pattern */}
+                    <defs>
+                        <pattern
+                            id="showcase-grid"
+                            width="45"
+                            height="45"
+                            patternUnits="userSpaceOnUse"
+                        >
+                            <path
+                                d="M 45 0 L 0 0 0 45"
+                                fill="none"
+                                stroke="#f0f0f0"
+                                stroke-width="0.5"
+                            />
+                        </pattern>
+                    </defs>
+                    <rect
+                        width="100%"
+                        height="100%"
+                        fill="url(#showcase-grid)"
+                    />
+
+                    {/* Header area */}
+                    <rect x="0" y="0" width="800" height="50" fill="#f8f9fa" />
+                    <text
+                        x="400"
+                        y="30"
+                        text-anchor="middle"
+                        font-size="12"
+                        fill="#666"
+                    >
+                        Drag tasks to test interactions and constraints
+                    </text>
+
+                    {/* Arrow A→B */}
+                    <Arrow
+                        from={getTaskAPos()}
+                        to={getTaskBPos()}
+                        dependencyType={constraintConfig.type || 'FS'}
+                        startAnchor={arrowConfig.startAnchor}
+                        endAnchor={arrowConfig.endAnchor}
+                        startOffset={arrowConfig.startOffset ?? undefined}
+                        endOffset={arrowConfig.endOffset}
+                        routing={arrowConfig.routing}
+                        curveRadius={arrowConfig.curveRadius}
+                        stroke={arrowConfig.stroke}
+                        strokeWidth={arrowConfig.strokeWidth}
+                        strokeOpacity={arrowConfig.strokeOpacity}
+                        strokeDasharray={arrowConfig.strokeDasharray}
+                        strokeLinecap={arrowConfig.strokeLinecap}
+                        strokeLinejoin={arrowConfig.strokeLinejoin}
+                        headShape={arrowConfig.headShape}
+                        headSize={arrowConfig.headSize}
+                        headFill={arrowConfig.headFill}
+                    />
+
+                    {/* Arrow B→C */}
+                    <Arrow
+                        from={getTaskBPos()}
+                        to={getTaskCPos()}
+                        dependencyType={constraintConfig.type || 'FS'}
+                        startAnchor={arrowConfig.startAnchor}
+                        endAnchor={arrowConfig.endAnchor}
+                        startOffset={arrowConfig.startOffset ?? undefined}
+                        endOffset={arrowConfig.endOffset}
+                        routing={arrowConfig.routing}
+                        curveRadius={arrowConfig.curveRadius}
+                        stroke={arrowConfig.stroke}
+                        strokeWidth={arrowConfig.strokeWidth}
+                        strokeOpacity={arrowConfig.strokeOpacity}
+                        strokeDasharray={arrowConfig.strokeDasharray}
+                        strokeLinecap={arrowConfig.strokeLinecap}
+                        strokeLinejoin={arrowConfig.strokeLinejoin}
+                        headShape={arrowConfig.headShape}
+                        headSize={arrowConfig.headSize}
+                        headFill={arrowConfig.headFill}
+                    />
+
+                    {/* Arrow C→D */}
+                    <Arrow
+                        from={getTaskCPos()}
+                        to={getTaskDPos()}
+                        dependencyType={constraintConfig.type || 'FS'}
+                        startAnchor={arrowConfig.startAnchor}
+                        endAnchor={arrowConfig.endAnchor}
+                        startOffset={arrowConfig.startOffset ?? undefined}
+                        endOffset={arrowConfig.endOffset}
+                        routing={arrowConfig.routing}
+                        curveRadius={arrowConfig.curveRadius}
+                        stroke={arrowConfig.stroke}
+                        strokeWidth={arrowConfig.strokeWidth}
+                        strokeOpacity={arrowConfig.strokeOpacity}
+                        strokeDasharray={arrowConfig.strokeDasharray}
+                        strokeLinecap={arrowConfig.strokeLinecap}
+                        strokeLinejoin={arrowConfig.strokeLinejoin}
+                        headShape={arrowConfig.headShape}
+                        headSize={arrowConfig.headSize}
+                        headFill={arrowConfig.headFill}
+                    />
+
+                    {/* Task A */}
+                    <Bar
+                        task={{
+                            id: 'task-a',
+                            name: taskConfig.name,
+                            progress: taskConfig.progress,
+                            color: taskConfig.color,
+                            color_progress: taskConfig.color_progress,
+                            constraints: { locked: taskConfig.locked },
+                            invalid: taskConfig.invalid,
+			    _start:daysFromNow(1),
+			    _end:daysFromNow(2),
+			    _index:1,
+                        }}
+                        taskStore={taskStore}
+                        cornerRadius={taskConfig.cornerRadius}
+                        readonly={globalConfig.readonly}
+                        readonlyDates={globalConfig.readonlyDates}
+                        readonlyProgress={globalConfig.readonlyProgress}
+                        showExpectedProgress={globalConfig.showExpectedProgress}
+                        columnWidth={
+                            globalConfig.snapToGrid
+                                ? globalConfig.columnWidth
+                                : 1
+                        }
+                        onConstrainPosition={handleConstrainPosition}
+                        onResizeEnd={handleResizeEnd}
+                        onHover={handleTaskHover}
+                        onHoverEnd={handleTaskHoverEnd}
+                        onTaskClick={handleTaskClick}
+                    />
+
+                    {/* Task B */}
+                    <Bar
+                        task={{
+                            id: 'task-b',
+                            name: taskBConfig.name,
+                            progress: taskBConfig.progress,
+                            color: taskBConfig.color,
+                            color_progress: taskBConfig.color_progress,
+                            constraints: { locked: taskBConfig.locked },
+			    _start:daysFromNow(3),
+			    _end:daysFromNow(4),
+			    _index:2,
+                        }}
+                        taskStore={taskStore}
+                        cornerRadius={3}
+                        readonly={globalConfig.readonly}
+                        readonlyDates={globalConfig.readonlyDates}
+                        readonlyProgress={globalConfig.readonlyProgress}
+                        columnWidth={
+                            globalConfig.snapToGrid
+                                ? globalConfig.columnWidth
+                                : 1
+                        }
+                        onConstrainPosition={handleConstrainPosition}
+                        onResizeEnd={handleResizeEnd}
+                        onHover={handleTaskHover}
+                        onHoverEnd={handleTaskHoverEnd}
+                        onTaskClick={handleTaskClick}
+                    />
+
+                    {/* Task C */}
+                    <Bar
+                        task={{
+                            id: 'task-c',
+                            name: taskCConfig.name,
+                            progress: taskCConfig.progress,
+                            color: taskCConfig.color,
+                            color_progress: taskCConfig.color_progress,
+                            constraints: { locked: taskCConfig.locked },
+			    _start:daysFromNow(5),
+			    _end:daysFromNow(6),
+			    _index:3,
+                        }}
+                        taskStore={taskStore}
+                        cornerRadius={3}
+                        readonly={globalConfig.readonly}
+                        readonlyDates={globalConfig.readonlyDates}
+                        readonlyProgress={globalConfig.readonlyProgress}
+                        columnWidth={
+                            globalConfig.snapToGrid
+                                ? globalConfig.columnWidth
+                                : 1
+                        }
+                        onConstrainPosition={handleConstrainPosition}
+                        onResizeEnd={handleResizeEnd}
+                        onHover={handleTaskHover}
+                        onHoverEnd={handleTaskHoverEnd}
+                        onTaskClick={handleTaskClick}
+                    />
+
+                    {/* Task D */}
+                    <Bar
+                        task={{
+                            id: 'task-d',
+                            name: taskDConfig.name,
+                            progress: taskDConfig.progress,
+                            color: taskDConfig.color,
+                            color_progress: taskDConfig.color_progress,
+                            constraints: { locked: taskDConfig.locked },
+			    _start:daysFromNow(7),
+			    _end:daysFromNow(8),
+			    _index:4,
+                        }}
+                        taskStore={taskStore}
+                        cornerRadius={3}
+                        readonly={globalConfig.readonly}
+                        readonlyDates={globalConfig.readonlyDates}
+                        readonlyProgress={globalConfig.readonlyProgress}
+                        columnWidth={
+                            globalConfig.snapToGrid
+                                ? globalConfig.columnWidth
+                                : 1
+                        }
+                        onConstrainPosition={handleConstrainPosition}
+                        onResizeEnd={handleResizeEnd}
+                        onHover={handleTaskHover}
+                        onHoverEnd={handleTaskHoverEnd}
+                        onTaskClick={handleTaskClick}
+                    />
+                </svg>
+            </div>
 
             {/* Info Box */}
             <div style={styles.infoBox}>
