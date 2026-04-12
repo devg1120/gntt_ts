@@ -32,7 +32,7 @@ interface ConstrainedResult {
 interface BarProps {
     //task: ProcessedTask | Accessor<ProcessedTask>;
     task: ProcessedTask  ;
-    taskId?: string;
+    taskId?: string | Function;
     taskStore?: TaskStore;
     ganttConfig?: GanttConfigStore;
     taskPosition?: TaskPosition | Accessor<TaskPosition | undefined>;
@@ -98,10 +98,8 @@ export function Bar(props: BarProps): JSX.Element {
     const taskId = ():string => {
         const id = props.taskId;
 	//console.log(id);
-        //return typeof id === 'function' ? id() : id ?? props.task?.id;
-        return  props.task?.id;
-        //return  id() ;
-	//return id;
+        return typeof id === 'function' ? id() : id ?? props.task?.id;
+        //return  props.task?.id;
     };
 
     // Get position directly from taskStore - plain function for virtualized components
